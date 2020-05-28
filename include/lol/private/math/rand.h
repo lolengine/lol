@@ -18,18 +18,29 @@
 //
 
 #include <cassert>
-#include <cstdlib>
+#include <random>
 #include <stdint.h>
 
 namespace lol
 {
 
-/* Random number generators */
-template<typename T> [[nodiscard]] static inline T rand();
-template<typename T> [[nodiscard]] static inline T rand(T a);
-template<typename T> [[nodiscard]] static inline T rand(T a, T b);
+// Random number generators
+template<typename T = int>
+[[nodiscard]] static inline T rand();
 
-/* One-value random number generators */
+template<typename T>
+[[nodiscard]] static inline T rand(T a);
+
+template<typename T>
+[[nodiscard]] static inline T rand(T a, T b);
+
+// Two-value random number generator -- no need for specialisation
+template<typename T> [[nodiscard]] static inline T rand(T a, T b)
+{
+    return a + rand<T>(b - a);
+}
+
+// One-value random number generators
 template<typename T> [[nodiscard]] static inline T rand(T a)
 {
     return a ? rand<T>() % a : T(0);
@@ -38,87 +49,48 @@ template<typename T> [[nodiscard]] static inline T rand(T a)
 #if 0
 template<> [[nodiscard]] inline half rand<half>(half a)
 {
-    float f = (float)std::rand() / (float)RAND_MAX;
-    return (half)(a * f);
+    return rand(1 << 13) / float(1 << 13) * a;
 }
 #endif
 
 template<> [[nodiscard]] inline float rand<float>(float a)
 {
-    auto f = (float)std::rand() / (float)RAND_MAX;
-    return a * f;
+    return rand(uint32_t(1) << 23) / float(uint32_t(1) << 23) * a;
 }
 
 template<> [[nodiscard]] inline double rand<double>(double a)
 {
-    auto f = (double)std::rand() / (double)RAND_MAX;
-    return a * f;
+    return rand(uint64_t(1) << 53) / double(uint64_t(1) << 53) * a;
 }
 
 template<> [[nodiscard]] inline long double rand<long double>(long double a)
 {
-    auto f = (long double)std::rand() / (long double)RAND_MAX;
-    return a * f;
+    return rand(uint64_t(1) << 63) / (long double)(uint64_t(1) << 63) * a;
 }
 
-/* Two-value random number generator -- no need for specialisation */
-template<typename T> [[nodiscard]] static inline T rand(T a, T b)
-{
-    return a + rand<T>(b - a);
-}
-
-/* Default random number generator */
+// Default random number generator
 template<typename T> [[nodiscard]] static inline T rand()
 {
-    switch (sizeof(T))
+    static std::minstd_rand eng { std::random_device{}() };
+
+    if constexpr (sizeof(T) == 1)
+        return static_cast<T>(eng() & 0x7fu);
+
+    if constexpr (sizeof(T) == 2)
+        return static_cast<T>(eng() & 0x7fffu);
+
+    if constexpr (sizeof(T) == 4)
+        return static_cast<T>(eng() & 0x7fffffffu);
+
+    if constexpr (sizeof(T) == 8)
     {
-    case 1:
-        return static_cast<T>(std::rand() & 0x7f);
-    case 2:
-    {
-        uint16_t ret = std::rand();
-        if (RAND_MAX < 0x7fff)
-            ret = (ret << 7) ^ std::rand();
-        return static_cast<T>(ret & 0x7fffu);
-    }
-    case 4:
-    {
-        uint32_t ret = std::rand();
-        if (RAND_MAX >= 0xffff)
-            ret = (ret << 16) ^ std::rand();
-        else
-        {
-            ret = (ret << 8) ^ std::rand();
-            ret = (ret << 8) ^ std::rand();
-            ret = (ret << 8) ^ std::rand();
-        }
-        return static_cast<T>(ret & 0x7fffffffu);
-    }
-    case 8:
-    {
-        uint64_t ret = std::rand();
-        if (RAND_MAX >= 0xffff)
-        {
-            ret = (ret << 16) ^ std::rand();
-            ret = (ret << 16) ^ std::rand();
-            ret = (ret << 16) ^ std::rand();
-        }
-        else
-        {
-            ret = (ret << 8) ^ std::rand();
-            ret = (ret << 8) ^ std::rand();
-            ret = (ret << 8) ^ std::rand();
-            ret = (ret << 8) ^ std::rand();
-            ret = (ret << 8) ^ std::rand();
-            ret = (ret << 8) ^ std::rand();
-            ret = (ret << 8) ^ std::rand();
-        }
+        uint64_t ret = eng();
+        ret = (ret << 16) ^ eng();
+        ret = (ret << 16) ^ eng();
         return static_cast<T>(ret & (~(uint64_t)0 >> 1));
     }
-    default:
-        assert(false);
-        return 0;
-    }
+
+    assert(false);
 }
 
 #if 0
@@ -128,5 +100,5 @@ template<> [[nodiscard]] inline float rand<float>() { return rand<float>(1.f); }
 template<> [[nodiscard]] inline double rand<double>() { return rand<double>(1.0); }
 template<> [[nodiscard]] inline long double rand<long double>() { return rand<long double>(1.0); }
 
-} /* namespace lol */
+} // namespace lol
 
