@@ -6,6 +6,9 @@
 	path = include/lol/3rdparty/mingw-std-threads
 	url = ../../lolengine/ext-mingw-std-threads.git
 	branch = master
+[submodule "step"]
+	path = include/lol/3rdparty/step
+	url = ../../lolengine/ext-step
 [submodule "portable-file-dialogs"]
 	path = include/lol/3rdparty/portable-file-dialogs
 	url = ../../samhocevar/portable-file-dialogs.git
