@@ -13,6 +13,6 @@
 	path = include/lol/3rdparty/portable-file-dialogs
 	url = ../../samhocevar/portable-file-dialogs.git
 	branch = master
-[submodule "clipp"]
-	path = include/lol/3rdparty/clipp
-	url = ../../muellan/clipp.git
+[submodule "cli11"]
+	path = include/lol/3rdparty/cli11
+	url = ../../lolengine/ext-cli11.git

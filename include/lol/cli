@@ -13,12 +13,20 @@
 #pragma once
 
 #include "private/push_macros.h"
-#include "3rdparty/clipp/include/clipp.h"
+#include "3rdparty/cli11/include/CLI/CLI.hpp"
 #include "private/pop_macros.h"
+
+namespace CLI
+{
+
+using app = App;
+
+};
 
 namespace lol
 {
 
-namespace cli = clipp;
+namespace cli = CLI;
 
 };
+
