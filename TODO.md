@@ -34,7 +34,6 @@
     src/lol/lua.h
     src/lol/net/http.h
     src/lol/public.h
-    src/lol/sys/file.h
     src/lol/sys/init.h
 
 
