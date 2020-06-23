@@ -236,6 +236,8 @@ public:
         resize_data(e);
     }
 
+    inline void clear() { resize(vec_t<int, N>(0)); }
+
     inline vec_t<int, N> sizes() const
     {
         return vec_t<int, N>(this->m_sizes);
