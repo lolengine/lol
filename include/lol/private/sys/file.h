@@ -31,7 +31,7 @@ static inline bool read(std::string const &path, T &data)
     if (file_size < 0)
         return false;
     f.seekg(0, std::ios::beg);
-    data.resize((file_size + sizeof(U) - 1) / sizeof(U));
+    data.resize((size_t(file_size) + sizeof(U) - 1) / sizeof(U));
     f.read((char *)data.data(), file_size);
     return !f.fail();
 }
