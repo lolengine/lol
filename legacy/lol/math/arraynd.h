@@ -15,8 +15,8 @@
 #pragma once
 
 //
-// The arraynd class
-// -----------------
+// The old_arraynd class
+// —————————————————————
 // A N-Dimensional array class allowing var[i][j][k]... indexing,
 //
 
@@ -31,11 +31,11 @@ namespace lol
 {
 
 template<typename T, int L>
-class arraynd_initializer
+class old_arraynd_initializer
 {
 public:
 
-    arraynd_initializer(std::initializer_list<arraynd_initializer<T, L - 1> > const & initializers) :
+    old_arraynd_initializer(std::initializer_list<old_arraynd_initializer<T, L - 1> > const & initializers) :
         m_initializers(initializers)
     {
     }
@@ -58,16 +58,16 @@ public:
 
 private:
 
-    std::initializer_list<arraynd_initializer<T, L - 1> > const & m_initializers;
+    std::initializer_list<old_arraynd_initializer<T, L - 1> > const & m_initializers;
 };
 
 
 template<typename T>
-class arraynd_initializer<T, 1>
+class old_arraynd_initializer<T, 1>
 {
 public:
 
-    arraynd_initializer(std::initializer_list<T> const & initializers) :
+    old_arraynd_initializer(std::initializer_list<T> const & initializers) :
         m_initializers(initializers)
     {
     }
@@ -92,14 +92,14 @@ private:
 
 
 template<int N, typename T>
-class [[nodiscard]] arraynd
+class [[nodiscard]] old_arraynd
 {
 public:
     typedef T element_t;
 
-    inline arraynd() = default;
+    inline old_arraynd() = default;
 
-    inline arraynd(vec_t<size_t, N> sizes, element_t e = element_t())
+    inline old_arraynd(vec_t<size_t, N> sizes, element_t e = element_t())
       : m_sizes(sizes)
     {
         resize_data(e);
@@ -107,13 +107,13 @@ public:
 
     /* Additional constructor if size_t != int */
     template<typename T2 = int, typename T3 = typename std::enable_if<!std::is_same<size_t, T2>::value, int>::type>
-    inline arraynd(vec_t<T2, N> sizes, element_t e = element_t())
+    inline old_arraynd(vec_t<T2, N> sizes, element_t e = element_t())
       : m_sizes(vec_t<size_t, N>(sizes))
     {
         resize_data(e);
     }
 
-    inline arraynd(std::initializer_list<arraynd_initializer<element_t, N - 1> > initializer)
+    inline old_arraynd(std::initializer_list<old_arraynd_initializer<element_t, N - 1> > initializer)
     {
         m_sizes[N - 1] = initializer.size();
 
@@ -140,7 +140,7 @@ public:
     inline element_t & operator[](vec_t<size_t, N> const &pos)
     {
         return const_cast<element_t &>(
-                   const_cast<arraynd<N, T> const&>(*this)[pos]);
+                   const_cast<old_arraynd<N, T> const&>(*this)[pos]);
     }
 
     /* If int != size_t, access elements directly using an ivec2,
@@ -158,7 +158,7 @@ public:
     inline element_t & operator[](vec_t<T2, N> const &pos)
     {
         return const_cast<element_t &>(
-                   const_cast<arraynd<N, T> const&>(*this)[pos]);
+                   const_cast<old_arraynd<N, T> const&>(*this)[pos]);
     }
 
     /* Proxy to access slices */
@@ -213,14 +213,14 @@ public:
     };
 
     /* Access addressable slices, allowing for array[i][j][...] syntax. */
-    inline slice<arraynd<N, T> const> operator[](size_t pos) const
+    inline slice<old_arraynd<N, T> const> operator[](size_t pos) const
     {
-        return slice<arraynd<N, T> const>(*this, pos, m_sizes[0]);
+        return slice<old_arraynd<N, T> const>(*this, pos, m_sizes[0]);
     }
 
-    inline slice<arraynd<N, T>> operator[](size_t pos)
+    inline slice<old_arraynd<N, T>> operator[](size_t pos)
     {
-        return slice<arraynd<N, T>>(*this, pos, m_sizes[0]);
+        return slice<old_arraynd<N, T>>(*this, pos, m_sizes[0]);
     }
 
     /* Resize the array.
@@ -266,8 +266,8 @@ private:
     vec_t<size_t, N> m_sizes { 0 };
 };
 
-template<typename T> using array2d = arraynd<2, T>;
-template<typename T> using array3d = arraynd<3, T>;
+template<typename T> using old_array2d = old_arraynd<2, T>;
+template<typename T> using old_array3d = old_arraynd<3, T>;
 
 } /* namespace lol */
 
