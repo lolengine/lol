@@ -25,6 +25,10 @@
 namespace lol
 {
 
+//
+// Common base class for narray and narray_view
+//
+
 template<typename T, size_t N, typename container_type>
 class [[nodiscard]] narray_base
 {
@@ -77,6 +81,17 @@ public:
         return data()[offset_helper(indices, std::make_index_sequence<N>{})];
     }
 
+    // Use CRTP to access data() from the child class
+    inline value_type *data()
+    {
+        return static_cast<container_type *>(this)->data();
+    }
+
+    inline value_type const *data() const
+    {
+        return static_cast<container_type const *>(this)->data();
+    }
+
 protected:
     template <size_t... I>
     inline size_t size_helper(std::index_sequence<I...>) const
@@ -99,20 +114,28 @@ protected:
     }
 
     vec_t<size_t, N> m_sizes { 0 };
-
-private:
-    // Use CRTP to access data() from the child class
-    inline value_type *data()
-    {
-        return static_cast<container_type *>(this)->data();
-    }
-
-    inline value_type const *data() const
-    {
-        return static_cast<container_type const *>(this)->data();
-    }
 };
 
+
+//
+// C++11 iterators
+//
+
+template<typename T, size_t N, typename U>
+T *begin(narray_base<T, N, U> &a) { return a.data(); }
+
+template<typename T, size_t N, typename U>
+T *end(narray_base<T, N, U> &a) { return a.data() + a.size(); }
+
+template<typename T, size_t N, typename U>
+T const *begin(narray_base<T, N, U> const &a) { return a.data(); }
+
+template<typename T, size_t N, typename U>
+T const *end(narray_base<T, N, U> const &a) { return a.data() + a.size(); }
+
+//
+// Array view
+//
 
 template<typename T, size_t N>
 class [[nodiscard]] narray : public narray_base<T, N, narray<T, N>>
@@ -166,6 +189,10 @@ private:
 template<typename T> using array2d = narray<T, 2>;
 template<typename T> using array3d = narray<T, 3>;
 
+//
+// Array view
+//
+
 template<typename T, size_t N>
 class [[nodiscard]] narray_view : public narray_base<T, N, narray_view<T, N>>
 {
@@ -174,7 +201,7 @@ public:
 
     template<typename U>
     inline narray_view(narray_base<T, N, U> &other)
-      : m_data(&other[0])
+      : m_data(other.data())
     {
         this->m_sizes = vec_t<size_t, N>(other.sizes());
     }
