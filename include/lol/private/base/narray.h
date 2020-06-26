@@ -21,15 +21,18 @@
 #include <lol/vector>  // lol::vec_t
 #include <vector>      // std::vector
 #include <utility>     // std::index_sequence
+#include <type_traits> // std::remove_const
 
 namespace lol
 {
 
+template<typename T, size_t N> class narray_span;
+
 //
-// Common base class for narray and narray_view
+// Common base class for narray and narray_span
 //
 
-template<typename T, size_t N, typename container_type>
+template<typename T, size_t N, template<typename, size_t> typename container_type>
 class [[nodiscard]] narray_base
 {
 public:
@@ -84,12 +87,23 @@ public:
     // Use CRTP to access data() from the child class
     inline value_type *data()
     {
-        return static_cast<container_type *>(this)->data();
+        return reinterpret_cast<container_type<T, N> &>(*this).data();
     }
 
     inline value_type const *data() const
     {
-        return static_cast<container_type const *>(this)->data();
+        return reinterpret_cast<container_type<T, N> const &>(*this).data();
+    }
+
+    // Create span (similar to std::span) with some const correctness
+    inline narray_span<T, N> span()
+    {
+        return narray_span<T, N>(*this);
+    }
+
+    inline narray_span<T const, N> span() const
+    {
+        return narray_span<T const, N>(*this);
     }
 
 protected:
@@ -121,24 +135,24 @@ protected:
 // C++11 iterators
 //
 
-template<typename T, size_t N, typename U>
+template<typename T, size_t N, template<typename, size_t> typename U>
 T *begin(narray_base<T, N, U> &a) { return a.data(); }
 
-template<typename T, size_t N, typename U>
+template<typename T, size_t N, template<typename, size_t> typename U>
 T *end(narray_base<T, N, U> &a) { return a.data() + a.size(); }
 
-template<typename T, size_t N, typename U>
+template<typename T, size_t N, template<typename, size_t> typename U>
 T const *begin(narray_base<T, N, U> const &a) { return a.data(); }
 
-template<typename T, size_t N, typename U>
+template<typename T, size_t N, template<typename, size_t> typename U>
 T const *end(narray_base<T, N, U> const &a) { return a.data() + a.size(); }
 
 //
-// Array view
+// N-dimensional array
 //
 
 template<typename T, size_t N>
-class [[nodiscard]] narray : public narray_base<T, N, narray<T, N>>
+class [[nodiscard]] narray : public narray_base<T, N, narray>
 {
 public:
     using value_type = T;
@@ -190,17 +204,25 @@ template<typename T> using array2d = narray<T, 2>;
 template<typename T> using array3d = narray<T, 3>;
 
 //
-// Array view
+// N-dimensional array span
 //
 
 template<typename T, size_t N>
-class [[nodiscard]] narray_view : public narray_base<T, N, narray_view<T, N>>
+class [[nodiscard]] narray_span : public narray_base<T, N, narray_span>
 {
 public:
     using value_type = T;
 
-    template<typename U>
-    inline narray_view(narray_base<T, N, U> &other)
+    template<template<typename, size_t> typename U>
+    inline narray_span(narray_base<T, N, U> &other)
+      : m_data(other.data())
+    {
+        this->m_sizes = vec_t<size_t, N>(other.sizes());
+    }
+
+    // Create an narray_span<T const> from a const narray_base<T>
+    template<template<typename, size_t> typename U, bool V = std::is_const<T>::value>
+    inline narray_span(narray_base<typename std::remove_const<T>::type, N, U> const &other)
       : m_data(other.data())
     {
         this->m_sizes = vec_t<size_t, N>(other.sizes());
@@ -214,8 +236,8 @@ private:
     T *m_data;
 };
 
-template<typename T> using array2d_view = narray_view<T, 2>;
-template<typename T> using array3d_view = narray_view<T, 3>;
+template<typename T> using span2d = narray_span<T, 2>;
+template<typename T> using span3d = narray_span<T, 3>;
 
 } // namespace lol
 

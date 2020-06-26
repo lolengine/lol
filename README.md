@@ -7,7 +7,7 @@ The header-only part of the Lol Engine framework.
 
 | header | description | examples |
 |--------|-------------|----------|
-| `<lol/narray>` | n-dimensional dynamic array containers | ● `lol::narray<int, 4>`<br>● `lol::array2d<float>`, `lol::array3d<uint8_t>`<br>● `lol::narray_view<int, 4>`<br>● `lol::array2d_view<uint8_t>`, `lol::array3d_view<float>` |
+| `<lol/narray>` | n-dimensional dynamic array containers | ● `lol::narray<int, 4>`<br>● `lol::array2d<float>`, `lol::array3d<uint8_t>`<br>● `lol::narray_span<int, 4>`<br>● `lol::span2d<uint8_t>`, `lol::span3d<float>` |
 
 ## Math
 
