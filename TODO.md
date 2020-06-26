@@ -10,8 +10,6 @@
     src/lol/algorithm/aabb_tree.h
     src/lol/algorithm/portal.h
     src/lol/base/avl_tree.h
-    src/lol/image/pixel.h (but is it useful?)
-    src/lol/math/arraynd.h (but do we really want to keep it?)
     src/lol/math/geometry.h
     src/lol/math/interp.h (but what is it?)
 
@@ -40,4 +38,20 @@
 ## headers to remove one day
 
     src/lol/base/enum.h (can’t see the point)
+
+## Interesting libraries:
+
+  - magic enum https://github.com/Neargye/magic_enum
+  - event dispatcher https://github.com/wqking/eventpp
+  - random https://github.com/effolkronium/random
+  - neither (handle exceptions with the type system) https://github.com/LoopPerfect/neither
+  - lock-free queue https://github.com/rigtorp/SPSCQueue
+  - fixed point math https://github.com/MikeLankamp/fpm
+
+## Other libraries
+
+  - coroutines (uses macros) https://github.com/jamboree/co2
+  - SIMD https://awesomeopensource.com/project/ospray/tsimd
+  - deep neural networks https://github.com/yixuan/MiniDNN
+  - emoji https://github.com/99xt/emojicpp
 
