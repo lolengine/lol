@@ -60,7 +60,7 @@ public:
         // of threads/cores even though the system cannot spawn threads.
         return false;
 #endif
-        return !disable_threads && std::thread::hardware_concurrency() > 1;
+        return !disable_threads;
     }
 
 private:
