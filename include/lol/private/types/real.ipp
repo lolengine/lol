@@ -549,20 +549,39 @@ template<typename T> real_t<T> real_t<T>::operator *(real_t<T> const &x) const
     /* Accumulate low order product; no need to store it, we just
      * want the carry value */
     uint64_t carry = 0, hicarry = 0, prev;
-    for (int i = 0; i < bigit_count(); ++i)
+    /* Calculate most significant digit of the carry, then
+     * calculate exactly if it's possible for carries from
+     * previous digits to affect the most significant one */
+    for (int j = 0; j < bigit_count(); j++)
     {
-        for (int j = 0; j < i + 1; j++)
-        {
-            prev = carry;
-            carry += (uint64_t)m_mantissa[bigit_count() - 1 - j]
-                   * (uint64_t)x.m_mantissa[bigit_count() - 1 + j - i];
-            if (carry < prev)
-                hicarry++;
-        }
-        carry >>= bigit_bits();
-        carry |= hicarry << bigit_bits();
-        hicarry >>= bigit_bits();
+        prev = carry;
+        carry += (uint64_t)m_mantissa[bigit_count() - 1 - j]
+               * (uint64_t)x.m_mantissa[j];
+        hicarry += (carry<prev);
     }
+
+    if ((carry+bigit_count()) >> bigit_bits() != carry >> bigit_bits())
+    {
+        carry = 0; hicarry = 0;
+        for (int i = 0; i < bigit_count(); ++i)
+        {
+            carry >>= bigit_bits();
+            carry |= hicarry << bigit_bits();
+            hicarry >>= bigit_bits();
+            for (int j = 0; j < i + 1; j++)
+            {
+                prev = carry;
+                carry += (uint64_t)m_mantissa[bigit_count() - 1 - j]
+                       * (uint64_t)x.m_mantissa[bigit_count() - 1 + j - i];
+                hicarry += (carry < prev);
+            }
+        }
+    }
+
+    carry >>= bigit_bits();
+    carry |= hicarry << bigit_bits();
+    hicarry >>= bigit_bits();
+
 
     /* Multiply the other components */
     for (int i = 0; i < bigit_count(); ++i)
@@ -571,15 +590,13 @@ template<typename T> real_t<T> real_t<T>::operator *(real_t<T> const &x) const
         {
             prev = carry;
             carry += (uint64_t)m_mantissa[bigit_count() - 1 - j]
-                   * (uint64_t)x.m_mantissa[j - 1 - i];
-            if (carry < prev)
-                hicarry++;
+                   *(uint64_t)x.m_mantissa[j - 1 - i];
+            hicarry += (carry<prev);
         }
         prev = carry;
         carry += m_mantissa[bigit_count() - 1 - i];
         carry += x.m_mantissa[bigit_count() - 1 - i];
-        if (carry < prev)
-            hicarry++;
+        hicarry += (carry<prev);
         ret.m_mantissa[bigit_count() - 1 - i] = carry & ~(bigit_t)0;
         carry >>= bigit_bits();
         carry |= hicarry << bigit_bits();
