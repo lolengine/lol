@@ -557,10 +557,10 @@ template<typename T> real_t<T> real_t<T>::operator *(real_t<T> const &x) const
         prev = carry;
         carry += (uint64_t)m_mantissa[bigit_count() - 1 - j]
                * (uint64_t)x.m_mantissa[j];
-        hicarry += (carry<prev);
+        hicarry += (carry < prev);
     }
 
-    if ((carry+bigit_count()) >> bigit_bits() != carry >> bigit_bits())
+    if ((carry + bigit_count()) >> bigit_bits() != carry >> bigit_bits())
     {
         carry = 0; hicarry = 0;
         for (int i = 0; i < bigit_count(); ++i)
@@ -582,7 +582,6 @@ template<typename T> real_t<T> real_t<T>::operator *(real_t<T> const &x) const
     carry |= hicarry << bigit_bits();
     hicarry >>= bigit_bits();
 
-
     /* Multiply the other components */
     for (int i = 0; i < bigit_count(); ++i)
     {
@@ -591,12 +590,12 @@ template<typename T> real_t<T> real_t<T>::operator *(real_t<T> const &x) const
             prev = carry;
             carry += (uint64_t)m_mantissa[bigit_count() - 1 - j]
                    * (uint64_t)x.m_mantissa[j - 1 - i];
-            hicarry += (carry<prev);
+            hicarry += (carry < prev);
         }
         prev = carry;
         carry += m_mantissa[bigit_count() - 1 - i];
         carry += x.m_mantissa[bigit_count() - 1 - i];
-        hicarry += (carry<prev);
+        hicarry += (carry < prev);
         ret.m_mantissa[bigit_count() - 1 - i] = carry & ~(bigit_t)0;
         carry >>= bigit_bits();
         carry |= hicarry << bigit_bits();
