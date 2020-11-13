@@ -590,7 +590,7 @@ template<typename T> real_t<T> real_t<T>::operator *(real_t<T> const &x) const
         {
             prev = carry;
             carry += (uint64_t)m_mantissa[bigit_count() - 1 - j]
-                   *(uint64_t)x.m_mantissa[j - 1 - i];
+                   * (uint64_t)x.m_mantissa[j - 1 - i];
             hicarry += (carry<prev);
         }
         prev = carry;
