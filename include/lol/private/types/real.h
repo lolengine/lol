@@ -157,6 +157,7 @@ public:
     template<typename U> friend real_t<U> fract(real_t<U> const &x);
     template<typename U> friend real_t<U> degrees(real_t<U> const &x);
     template<typename U> friend real_t<U> radians(real_t<U> const &x);
+    template<typename U> friend int sign(real_t<U> const &x);
 
     // Additional functions
     template<typename U> friend real_t<U> franke(real_t<U> const &x,

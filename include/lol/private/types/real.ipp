@@ -1007,6 +1007,11 @@ template<typename T> real_t<T> radians(real_t<T> const &x)
     return x * mul;
 }
 
+template<typename T> int sign(real_t<T> const &x)
+{
+    return x.is_zero() ? 0 : x.is_negative() ? -1 : 1;
+}
+
 template<typename T> real_t<T> fast_log(real_t<T> const &x)
 {
     /* This fast log method is tuned to work on the [1..2] range and
