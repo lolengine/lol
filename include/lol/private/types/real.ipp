@@ -1012,6 +1012,29 @@ template<typename T> int sign(real_t<T> const &x)
     return x.is_zero() ? 0 : x.is_negative() ? -1 : 1;
 }
 
+template<typename T> real_t<T> fast_log_1p_1m(real_t<T> const &x)
+{
+    // This is a fast implementation of ln(y) where y = (x + 1) / (x - 1):
+    //    ln(y) = ln(1 + x) - ln(1 - x)
+    //          = x - x²/2 + x³/3 - x⁴/4 … + x - x²/2 + x³/3 - x⁴/4 …
+    //          = 2 (x + x³/3 + x⁵/5 …)
+    //          = 2 x (1 + x²/3 + x⁴/5 + x⁶/7 …)
+    // Convergence is fast for values near 0.
+    auto x2 = x * x, xn = x2;
+    auto sum = real_t<T>::R_1();
+
+    for (int i = 3; ; i += 2)
+    {
+        auto newsum = sum + xn / real_t<T>(i);
+        if (newsum == sum)
+            break;
+        sum = newsum;
+        xn *= x2;
+    }
+
+    return x * sum * 2;
+}
+
 template<typename T> real_t<T> fast_log(real_t<T> const &x)
 {
     /* This fast log method is tuned to work on the [1..2] range and
@@ -1024,25 +1047,14 @@ template<typename T> real_t<T> fast_log(real_t<T> const &x)
      * And the following identities:
      *    ln(x) = 2 ln(y)
      *          = 2 ln((1 + z) / (1 - z))
-     *          = 4 z (1 + z^2 / 3 + z^4 / 5 + z^6 / 7...)
      *
      * Any additional sqrt() call would halve the convergence time, but
      * would also impact the final precision. For now we stick with one
      * sqrt() call. */
     auto y = sqrt(x);
-    auto z = (y - real_t<T>::R_1()) / (y + real_t<T>::R_1()), z2 = z * z, zn = z2;
-    auto sum = real_t<T>::R_1();
+    auto z = (y - real_t<T>::R_1()) / (y + real_t<T>::R_1());
 
-    for (int i = 3; ; i += 2)
-    {
-        auto newsum = sum + zn / real_t<T>(i);
-        if (newsum == sum)
-            break;
-        sum = newsum;
-        zn *= z2;
-    }
-
-    return z * sum * 4;
+    return fast_log_1p_1m(z) * 2;
 }
 
 template<typename T> real_t<T> log(real_t<T> const &x)
@@ -1055,6 +1067,20 @@ template<typename T> real_t<T> log(real_t<T> const &x)
     auto tmp = x;
     tmp.m_exponent = 0;
     return real_t<T>(x.m_exponent) * real_t<T>::R_LN2() + fast_log(tmp);
+}
+
+template<typename T> real_t<T> log1p(real_t<T> const &x)
+{
+    // Strategy for log1p(x): if |x| < 0.5 then we use the following
+    // variable substitution:
+    //   y = x / (2 + x)
+    //
+    // And the following identity:
+    //   ln(1 + x) = ln((1 + y) / ( 1 - y))
+    //
+    // Otherwise we just use standard log()
+    bool near_zero = (fabs(x) < real_t<T>::R_1() / 2);
+    return near_zero ? fast_log_1p_1m(x / (real_t<T>::R_2() + x)) : log(x) - real_t<T>::R_1();
 }
 
 template<typename T> real_t<T> log2(real_t<T> const &x)
@@ -1127,6 +1153,12 @@ template<typename T> real_t<T> exp2(real_t<T> const &x)
     auto x1 = fast_exp_sub<T>(x0 * real_t<T>::R_LN2(), real_t<T>::R_0());
     x1.m_exponent += e0;
     return x1;
+}
+
+template<typename T> real_t<T> expm1(real_t<T> const &x)
+{
+    bool near_zero = (fabs(x) < real_t<T>::R_1() / 2);
+    return near_zero ? fast_exp_sub(x, real_t<T>::R_1()) : exp(x) - real_t<T>::R_1();
 }
 
 template<typename T> real_t<T> erf(real_t<T> const &x)

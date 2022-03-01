@@ -120,10 +120,12 @@ public:
     // Exponential and logarithmic functions
     template<typename U> friend real_t<U> exp(real_t<U> const &x);
     template<typename U> friend real_t<U> exp2(real_t<U> const &x);
+    template<typename U> friend real_t<U> expm1(real_t<U> const &x);
     template<typename U> friend real_t<U> erf(real_t<U> const &x);
     template<typename U> friend real_t<U> log(real_t<U> const &x);
     template<typename U> friend real_t<U> log2(real_t<U> const &x);
     template<typename U> friend real_t<U> log10(real_t<U> const &x);
+    template<typename U> friend real_t<U> log1p(real_t<U> const &x);
 
     // Floating-point functions
     template<typename U> friend real_t<U> frexp(real_t<U> const &x,
