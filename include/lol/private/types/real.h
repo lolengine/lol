@@ -123,6 +123,7 @@ public:
     template<typename U> friend real_t<U> expm1(real_t<U> const &x);
     template<typename U> friend real_t<U> erf(real_t<U> const &x);
     template<typename U> friend real_t<U> erfc(real_t<U> const &x);
+    template<typename U> friend real_t<U> erfcx(real_t<U> const &x);
     template<typename U> friend real_t<U> log(real_t<U> const &x);
     template<typename U> friend real_t<U> log2(real_t<U> const &x);
     template<typename U> friend real_t<U> log10(real_t<U> const &x);

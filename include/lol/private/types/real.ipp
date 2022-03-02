@@ -1180,7 +1180,7 @@ template<typename T> real_t<T> erf(real_t<T> const &x)
     // FIXME: this test is inefficient; the series below converges slowly for 1≤x≤7,
     // but on the other hand there are accuracy issues with the erfc() implementation
     // in that range.
-    if (x > real_t<T>(7))
+    if (x >= real_t<T>(7))
         return real_t<T>::R_1() - erfc(x);
 
     auto sum = real_t<T>::R_0();
@@ -1201,13 +1201,25 @@ template<typename T> real_t<T> erf(real_t<T> const &x)
 template<typename T> real_t<T> erfc(real_t<T> const &x)
 {
     // Strategy for erfc(x):
-    //  - if x<1, erfc(x) = 1-erf(x)
-    //  - if x≥1, erfc(x) = exp(-x²)/(x·sqrt(π))·sum((-1)^n·(2n-1)!!/(2x²)^n)
-    if (x < real_t<T>::R_1())
+    //  - if x<7, erfc(x) = 1-erf(x)
+    //  - if x≥7, erfc(x) = exp(-x²)·erfcx(x)
+    if (x < real_t<T>(7))
         return real_t<T>::R_1() - erf(x);
 
+    return exp(-x * x) * erfcx(x);
+}
+
+template<typename T> real_t<T> erfcx(real_t<T> const &x)
+{
+    // Strategy for erfc(x):
+    //  - if x<7, erfc(x) = exp(x²)·(1-erf(x))
+    //  - if x≥7, erfc(x) = sum((-1)^n·(2n-1)!!/(2x²)^n) / (x·sqrt(π))
     auto sum = real_t<T>::R_0();
     auto x2 = x * x;
+
+    if (x < real_t<T>(7))
+        return exp(x2) * (real_t<T>::R_1() - erf(x));
+
     // XXX: The series does not converge, there is an optimal value around
     // ⌊x²+0.5⌋. If maximum accuracy cannot be reached, we must stop summing
     // when divergence is detected.
@@ -1223,7 +1235,7 @@ template<typename T> real_t<T> erfc(real_t<T> const &x)
         prev = tmp;
     }
 
-    return exp(-x2) / (x * sqrt(real_t<T>::R_PI())) * sum;
+    return sum / (x * sqrt(real_t<T>::R_PI()));
 }
 
 template<typename T> real_t<T> sinh(real_t<T> const &x)
