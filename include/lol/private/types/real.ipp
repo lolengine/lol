@@ -1161,6 +1161,28 @@ template<typename T> real_t<T> expm1(real_t<T> const &x)
     return near_zero ? fast_exp_sub(x, real_t<T>::R_1()) : exp(x) - real_t<T>::R_1();
 }
 
+template<typename T> real_t<T> fast_erfcx(real_t<T> const &x, real_t<T> const &x2)
+{
+    auto sum = real_t<T>::R_0();
+
+    // XXX: The series does not converge, there is an optimal value around
+    // ⌊x²+0.5⌋. If maximum accuracy cannot be reached, we must stop summing
+    // when divergence is detected.
+    auto prev = x2;
+    auto xn = real_t<T>::R_1(), xmul = inverse(x2 + x2);
+    for (int n = 0;; ++n, xn *= xmul)
+    {
+        auto tmp = xn * fast_fact<T>(n * 2 - 1, 2);
+        auto newsum = (n & 1) ? sum - tmp : sum + tmp;
+        if (newsum == sum || tmp > prev)
+            break;
+        sum = newsum;
+        prev = tmp;
+    }
+
+    return sum / (x * sqrt(real_t<T>::R_PI()));
+}
+
 template<typename T> real_t<T> erf(real_t<T> const &x)
 {
     /* Strategy for erf(x):
@@ -1206,43 +1228,29 @@ template<typename T> real_t<T> erfc(real_t<T> const &x)
     if (x < real_t<T>(7))
         return real_t<T>::R_1() - erf(x);
 
-    return exp(-x * x) * erfcx(x);
+    auto x2 = x * x;
+    return exp(-x2) * fast_erfcx(x, x2);
 }
 
 template<typename T> real_t<T> erfcx(real_t<T> const &x)
 {
-    // Strategy for erfc(x):
-    //  - if x<7, erfc(x) = exp(x²)·(1-erf(x))
-    //  - if x≥7, erfc(x) = sum((-1)^n·(2n-1)!!/(2x²)^n) / (x·sqrt(π))
+    // Strategy for erfcx(x):
+    //  - if x<7, erfcx(x) = exp(x²)·(1-erf(x))
+    //  - if x≥7, erfcx(x) = sum((-1)^n·(2n-1)!!/(2x²)^n) / (x·sqrt(π))
     auto sum = real_t<T>::R_0();
     auto x2 = x * x;
 
     if (x < real_t<T>(7))
         return exp(x2) * (real_t<T>::R_1() - erf(x));
 
-    // XXX: The series does not converge, there is an optimal value around
-    // ⌊x²+0.5⌋. If maximum accuracy cannot be reached, we must stop summing
-    // when divergence is detected.
-    auto prev = x2;
-    auto xn = real_t<T>::R_1(), xmul = inverse(x2 + x2);
-    for (int n = 0;; ++n, xn *= xmul)
-    {
-        auto tmp = xn * fast_fact<T>(n * 2 - 1, 2);
-        auto newsum = (n & 1) ? sum - tmp : sum + tmp;
-        if (newsum == sum || tmp > prev)
-            break;
-        sum = newsum;
-        prev = tmp;
-    }
-
-    return sum / (x * sqrt(real_t<T>::R_PI()));
+    return fast_erfcx(x, x2);
 }
 
 template<typename T> real_t<T> sinh(real_t<T> const &x)
 {
     // Use expm1() to ensure high accuracy around 0. No need to worry about
     // accuracy in other ranges because either exp(x) or exp(-x) will be
-    // very large and cancel the other term.
+    // large enough to cancel the other term.
     return (expm1(x) - expm1(-x)) / 2;
 }
 
