@@ -1165,8 +1165,8 @@ template<typename T> real_t<T> erf(real_t<T> const &x)
 {
     /* Strategy for erf(x):
      *  - if x<0, erf(x) = -erf(-x)
+     *  - if x>7, erf(x) = 1-erfc(x)
      *  - if x<7, erf(x) = sum((-1)^n·x^(2n+1)/((2n+1)·n!))/sqrt(π/4)
-     *  - if x≥7, erf(x) = 1+exp(-x²)/(x·sqrt(π))·sum((-1)^n·(2n-1)!!/(2x²)^n
      *
      * FIXME: do not compute factorials at each iteration, accumulate
      * them instead (see fast_exp_sub).
@@ -1177,39 +1177,53 @@ template<typename T> real_t<T> erf(real_t<T> const &x)
     if (x.is_negative())
         return -erf(-x);
 
+    // FIXME: this test is inefficient; the series below converges slowly for 1≤x≤7,
+    // but on the other hand there are accuracy issues with the erfc() implementation
+    // in that range.
+    if (x > real_t<T>(7))
+        return real_t<T>::R_1() - erfc(x);
+
     auto sum = real_t<T>::R_0();
     auto x2 = x * x;
-
-    /* FIXME: this test is inefficient; the series converges slowly for x≥1 */
-    if (x < real_t<T>(7))
+    auto xn = x, xmul = x2;
+    for (int n = 0;; ++n, xn *= xmul)
     {
-        auto xn = x, xmul = x2;
-        for (int n = 0;; ++n, xn *= xmul)
-        {
-            auto tmp = xn / (fast_fact<T>(n) * (2 * n + 1));
-            auto newsum = (n & 1) ? sum - tmp : sum + tmp;
-            if (newsum == sum)
-                break;
-            sum = newsum;
-        }
-        return sum * real_t<T>::R_2_SQRTPI();
+        auto tmp = xn / (fast_fact<T>(n) * (2 * n + 1));
+        auto newsum = (n & 1) ? sum - tmp : sum + tmp;
+        if (newsum == sum)
+            break;
+        sum = newsum;
     }
-    else
-    {
-        auto xn = real_t<T>::R_1(), xmul = inverse(x2 + x2);
-        /* FIXME: this does not converge well! We need to stop at 30
-         * iterations and sacrifice some accuracy. */
-        for (int n = 0; n < 30; ++n, xn *= xmul)
-        {
-            auto tmp = xn * fast_fact<T>(n * 2 - 1, 2);
-            auto newsum = (n & 1) ? sum - tmp : sum + tmp;
-            if (newsum == sum)
-                break;
-            sum = newsum;
-        }
 
-        return real_t<T>::R_1() - exp(-x2) / (x * sqrt(real_t<T>::R_PI())) * sum;
+    return sum * real_t<T>::R_2_SQRTPI();
+}
+
+template<typename T> real_t<T> erfc(real_t<T> const &x)
+{
+    // Strategy for erfc(x):
+    //  - if x<1, erfc(x) = 1-erf(x)
+    //  - if x≥1, erfc(x) = exp(-x²)/(x·sqrt(π))·sum((-1)^n·(2n-1)!!/(2x²)^n)
+    if (x < real_t<T>::R_1())
+        return real_t<T>::R_1() - erf(x);
+
+    auto sum = real_t<T>::R_0();
+    auto x2 = x * x;
+    // XXX: The series does not converge, there is an optimal value around
+    // ⌊x²+0.5⌋. If maximum accuracy cannot be reached, we must stop summing
+    // when divergence is detected.
+    auto prev = x2;
+    auto xn = real_t<T>::R_1(), xmul = inverse(x2 + x2);
+    for (int n = 0;; ++n, xn *= xmul)
+    {
+        auto tmp = xn * fast_fact<T>(n * 2 - 1, 2);
+        auto newsum = (n & 1) ? sum - tmp : sum + tmp;
+        if (newsum == sum || tmp > prev)
+            break;
+        sum = newsum;
+        prev = tmp;
     }
+
+    return exp(-x2) / (x * sqrt(real_t<T>::R_PI())) * sum;
 }
 
 template<typename T> real_t<T> sinh(real_t<T> const &x)
