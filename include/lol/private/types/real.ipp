@@ -1228,29 +1228,23 @@ template<typename T> real_t<T> erfc(real_t<T> const &x)
 
 template<typename T> real_t<T> sinh(real_t<T> const &x)
 {
-    /* We cannot always use (exp(x)-exp(-x))/2 because we'll lose
-     * accuracy near zero. We only use this identity for |x|>0.5. If
-     * |x|<=0.5, we compute exp(x)-1 and exp(-x)-1 instead. */
-    bool near_zero = (fabs(x) < real_t<T>::R_1() / 2);
-    auto x1 = near_zero ? fast_exp_sub(x, real_t<T>::R_1()) : exp(x);
-    auto x2 = near_zero ? fast_exp_sub(-x, real_t<T>::R_1()) : exp(-x);
-    return (x1 - x2) / 2;
+    // Use expm1() to ensure high accuracy around 0. No need to worry about
+    // accuracy in other ranges because either exp(x) or exp(-x) will be
+    // very large and cancel the other term.
+    return (expm1(x) - expm1(-x)) / 2;
 }
 
 template<typename T> real_t<T> tanh(real_t<T> const &x)
 {
-    /* See sinh() for the strategy here */
-    bool near_zero = (fabs(x) < real_t<T>::R_1() / 2);
-    auto x1 = near_zero ? fast_exp_sub(x, real_t<T>::R_1()) : exp(x);
-    auto x2 = near_zero ? fast_exp_sub(-x, real_t<T>::R_1()) : exp(-x);
-    auto x3 = near_zero ? x1 + x2 + real_t<T>::R_2() : x1 + x2;
-    return (x1 - x2) / x3;
+    // See sinh() for the strategy here.
+    auto x1 = expm1(x), x2 = expm1(-x);
+    return (x1 - x2) / (x1 + x2 + real_t<T>::R_2());
 }
 
 template<typename T> real_t<T> cosh(real_t<T> const &x)
 {
-    /* No need to worry about accuracy here; maybe the last bit is slightly
-     * off, but that's about it. */
+    // No need to worry about accuracy here; maybe the last bit is slightly
+    // off, but that's about it.
     return (exp(x) + exp(-x)) / 2;
 }
 
