@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2023 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -103,8 +103,9 @@ private:
  */
 
 #define LOL_COMMON_MEMBER_OPS(first) \
-    inline T& operator[](size_t n) { return (&this->first)[n]; } \
-    inline T const& operator[](size_t n) const { return (&this->first)[n]; } \
+    /* Use reinterpret_cast because static_cast is illegal here */ \
+    inline T& operator[](size_t n) { return reinterpret_cast<T*>(this)[n]; } \
+    inline T const& operator[](size_t n) const { return reinterpret_cast<T const*>(this)[n]; } \
     \
     /* An explicit assignment operator is now mandatory */ \
     inline type & operator =(type const &that) \

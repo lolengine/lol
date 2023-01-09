@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2023 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -27,6 +27,7 @@
 #include <tuple>      // std::tuple
 #include <cassert>    // assert()
 #include <cmath>      // sqrt(), cbrt(), acos()
+#include <cstddef>    // std::size_t
 
 namespace lol
 {
@@ -265,13 +266,13 @@ struct [[nodiscard]] polynomial
         return {};
     }
 
-    /* Access individual coefficients. This is read-only and returns a
-     * copy because we cannot let the user mess with the integrity of
-     * the structure (i.e. the guarantee that the leading coefficient
-     * remains non-zero). */
-    [[nodiscard]] inline T operator[](ptrdiff_t n) const
+    // Access individual coefficients. This is read-only and returns a
+    // copy because we cannot let the user mess with the integrity of
+    // the structure (i.e. the guarantee that the leading coefficient
+    // remains non-zero).
+    [[nodiscard]] inline T operator[](std::size_t n) const
     {
-        if (n < 0 || n > degree())
+        if (degree() < 0 || n > std::size_t(degree()))
             return T(0);
 
         return m_coefficients[n];
