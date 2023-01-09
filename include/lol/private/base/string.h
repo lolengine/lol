@@ -1,8 +1,8 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010—2020 Sam Hocevar <sam@hocevar.net>
-//            © 2013—2015 Benjamin “Touky” Huet <huet.benjamin@gmail.com>
+//  Copyright © 2010–2023 Sam Hocevar <sam@hocevar.net>
+//            © 2013–2015 Benjamin “Touky” Huet <huet.benjamin@gmail.com>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -24,6 +24,7 @@
 #include <vector>    // std::vector
 #include <string>    // std::basic_string
 #include <algorithm> // std::transform
+#include <iterator>  // std::back_inserter
 #include <cstdarg>   // va_list
 #include <cctype>    // size_t
 

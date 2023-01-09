@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2023 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -130,7 +130,7 @@ template<typename T, typename T2 = LOL_T_FLOATING_POINT>
 }
 
 // Round up to next power of two
-template<typename T, typename T2=LOL_T_INTEGRAL>
+template<typename T, typename T2=LOL_T_UNSIGNED>
 [[nodiscard]] static inline T2 bit_ceil(T x)
 {
 #if defined __cpp_lib_int_pow2
