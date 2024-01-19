@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -12,7 +12,8 @@
 
 #pragma once
 
-#include <cmath> // std::cos, std::sin
+#include <cmath>  // std::cos, std::sin
+#include <format> // std::format
 
 namespace lol
 {
@@ -20,13 +21,13 @@ namespace lol
 template<>
 inline std::string cmplx::tostring() const
 {
-    return format("[ %6.6f %6.6f ]", x, y);
+    return std::format("[ {:6.6f} {:6.6f} ]", x, y);
 }
 
 template<>
 inline std::string quat::tostring() const
 {
-    return format("[ %6.6f %6.6f %6.6f %6.6f ]", w, x, y, z);
+    return std::format("[ {:6.6f} {:6.6f} {:6.6f} {:6.6f} ]", w, x, y, z);
 
 }
 
@@ -291,5 +292,4 @@ DEFINE_GENERIC_EULER_CONVERSIONS(z, y, x)
 #undef DEFINE_GENERIC_EULER_CONVERSIONS
 #undef DEFINE_GENERIC_EULER_CONVERSIONS_INNER
 
-} /* namespace lol */
-
+} // namespace lol

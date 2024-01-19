@@ -31,7 +31,7 @@ The header-only part of the Lol Engine framework.
 | `<lol/msg>`       | simple message logging | ● `lol::msg::info("hello\n");`<br>● `lol::msg::debug("%d %d\n", x, y);`<br>● also `lol::msg::error`, `lol::msg::warn` |
 | `<lol/thread>`    | threading and timing | ● `lol::thread`<br>● `lol::queue<int, 200>` (thread-safe FIFO queue)<br>● `lol::timer` (high precision timer) |
 | `<lol/unit_test>` | unit test framework | |
-| `<lol/utils>`     | various utilities: environment variables, string formatting, std::map and std::vector extensions… | |
+| `<lol/utils>`     | various utilities: environment variables, std::map and std::vector extensions… | |
 
 ## Text utilities
 

@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -15,6 +15,7 @@
 #include <cassert>
 #include <cmath>     // std::tan
 #include <algorithm> // std::max
+#include <format>    // std::format
 
 namespace lol
 {
@@ -24,8 +25,8 @@ inline std::string mat2::tostring() const
 {
     mat2 const &p = *this;
 
-    return format("[ %6.6f %6.6f\n", p[0][0], p[1][0]) +
-           format("  %6.6f %6.6f ]\n", p[0][1], p[1][1]);
+    return std::format("[ {:6.6f} {:6.6f}\n", p[0][0], p[1][0]) +
+           std::format("  {:6.6f} {:6.6f} ]\n", p[0][1], p[1][1]);
 }
 
 template<>
@@ -33,9 +34,9 @@ inline std::string mat3::tostring() const
 {
     mat3 const &p = *this;
 
-    return format("[ %6.6f %6.6f %6.6f\n", p[0][0], p[1][0], p[2][0]) +
-           format("  %6.6f %6.6f %6.6f\n", p[0][1], p[1][1], p[2][1]) +
-           format("  %6.6f %6.6f %6.6f ]\n", p[0][2], p[1][2], p[2][2]);
+    return std::format("[ {:6.6f} {:6.6f} {:6.6f}\n", p[0][0], p[1][0], p[2][0]) +
+           std::format("  {:6.6f} {:6.6f} {:6.6f}\n", p[0][1], p[1][1], p[2][1]) +
+           std::format("  {:6.6f} {:6.6f} {:6.6f} ]\n", p[0][2], p[1][2], p[2][2]);
 }
 
 template<>
@@ -43,14 +44,14 @@ inline std::string mat4::tostring() const
 {
     mat4 const &p = *this;
 
-    return format("[ %6.6f %6.6f %6.6f %6.6f\n",
-                  p[0][0], p[1][0], p[2][0], p[3][0]) +
-           format("  %6.6f %6.6f %6.6f %6.6f\n",
-                  p[0][1], p[1][1], p[2][1], p[3][1]) +
-           format("  %6.6f %6.6f %6.6f %6.6f\n",
-                  p[0][2], p[1][2], p[2][2], p[3][2]) +
-           format("  %6.6f %6.6f %6.6f %6.6f ]\n",
-                  p[0][3], p[1][3], p[2][3], p[3][3]);
+    return std::format("[ {:6.6f} {:6.6f} {:6.6f} {:6.6f}\n",
+                       p[0][0], p[1][0], p[2][0], p[3][0]) +
+           std::format("  {:6.6f} {:6.6f} {:6.6f} {:6.6f}\n",
+                       p[0][1], p[1][1], p[2][1], p[3][1]) +
+           std::format("  {:6.6f} {:6.6f} {:6.6f} {:6.6f}\n",
+                       p[0][2], p[1][2], p[2][2], p[3][2]) +
+           std::format("  {:6.6f} {:6.6f} {:6.6f} {:6.6f} ]\n",
+                       p[0][3], p[1][3], p[2][3], p[3][3]);
 }
 
 template<typename T>

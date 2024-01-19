@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "../base/string.h" // lol::format
+#include <format> // std::format
 
 namespace lol
 {
@@ -20,38 +20,37 @@ namespace lol
 template<>
 inline std::string vec2::tostring() const
 {
-    return format("[ %6.6f %6.6f ]", x, y);
+    return std::format("[ {:6.6f} {:6.6f} ]", x, y);
 }
 
 template<>
 inline std::string ivec2::tostring() const
 {
-    return format("[ %i %i ]", x, y);
+    return std::format("[ {} {} ]", x, y);
 }
 
 template<>
 inline std::string vec3::tostring() const
 {
-    return format("[ %6.6f %6.6f %6.6f ]", x, y, z);
+    return std::format("[ {:6.6f} {:6.6f} {:6.6f} ]", x, y, z);
 }
 
 template<>
 inline std::string ivec3::tostring() const
 {
-    return format("[ %i %i %i ]", x, y, z);
+    return std::format("[ {} {} {} ]", x, y, z);
 }
 
 template<>
 inline std::string vec4::tostring() const
 {
-    return format("[ %6.6f %6.6f %6.6f %6.6f ]", x, y, z, w);
+    return std::format("[ {:6.6f} {:6.6f} {:6.6f} {:6.6f} ]", x, y, z, w);
 }
 
 template<>
 inline std::string ivec4::tostring() const
 {
-    return format("[ %i %i %i %i ]", x, y, z, w);
+    return std::format("[ {} {} {} {} ]", x, y, z, w);
 }
 
-} /* namespace lol */
-
+} // namespace lol

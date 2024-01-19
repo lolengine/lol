@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010–2023 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2024 Sam Hocevar <sam@hocevar.net>
 //            © 2013–2015 Benjamin “Touky” Huet <huet.benjamin@gmail.com>
 //
 //  Lol Engine is free software. It comes without any warranty, to
@@ -21,11 +21,11 @@
 
 #include "../features.h"
 
+#include <format>    // std::format
 #include <vector>    // std::vector
 #include <string>    // std::basic_string
 #include <algorithm> // std::transform
 #include <iterator>  // std::back_inserter
-#include <cstdarg>   // va_list
 #include <cctype>    // size_t
 
 namespace lol
@@ -47,7 +47,7 @@ std::vector<std::basic_string<T>> split(std::basic_string<T> const &s,
     return ret;
 }
 
-// Split a string along multiple separator
+// Split a string along multiple separator characters
 template<typename T>
 std::vector<std::basic_string<T>> split(std::basic_string<T> const &s,
                                         std::basic_string<T> const &seps)
@@ -148,45 +148,4 @@ std::basic_string<T> toupper(T const *s)
     return toupper(std::basic_string<T>(s));
 }
 
-// Format a string, printf-style
-template<typename T = char>
-std::basic_string<T> vformat(char const *fmt, va_list ap)
-{
-    va_list ap2;
-#if defined va_copy || !defined _MSC_VER
-    // Visual Studio 2010 does not support va_copy.
-    va_copy(ap2, ap);
-#else
-    ap2 = ap;
-#endif
-
-    // vsnprintf() tells us how many characters we need, not counting
-    // the terminating null character.
-    size_t needed = vsnprintf(nullptr, 0, fmt, ap2);
-
-#if defined va_copy || !defined _MSC_VER
-    // do not call va_end() if va_copy() wasn't called.
-    va_end(ap2);
-#endif
-
-    std::string ret;
-    ret.resize(needed);
-    vsnprintf(&ret[0], needed + 1, fmt, ap);
-
-    return ret;
-}
-
-// XXX: we cheat by setting the argument time to char instead of T, because
-// I found no other way to use the printf attribute.
-template<typename T = char>
-std::basic_string<T> lol_attr_printf_format(1, 2) format(char const *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    std::basic_string<T> ret = vformat(fmt, ap);
-    va_end(ap);
-    return ret;
-}
-
 } // namespace lol
-

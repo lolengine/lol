@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -42,13 +42,3 @@
 #   endif
 
 #endif
-
-
-// Define some attribute macros
-
-#ifdef __GNUC__
-#   define lol_attr_printf_format(n, p) __attribute__((format(printf, n, p)))
-#else
-#   define lol_attr_printf_format(n, p)
-#endif
-
