@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -13,11 +13,13 @@
 #pragma once
 
 #if !_DEBUG
-#include "../base/env.h" // sys::getenv
+#include "../base/env.h" // lol::sys::getenv
 #endif
 
 #include <cstdarg> // va_start
-#include <cstdio>  // std::vfprintf
+#include <cstdio> // std::vfprintf
+#include <functional> // std::function
+#include <string> // std::string
 
 namespace lol
 {
@@ -48,6 +50,12 @@ struct msg
         helper(message_type::error, fmt, args...);
     }
 
+    // Allow the user to provide their own logging function
+    static void set_output(std::function<bool(std::string const&)> fn)
+    {
+        get_output() = fn;
+    }
+
 private:
     msg() = delete;
 
@@ -57,6 +65,12 @@ private:
         info,
         warn,
         error,
+    };
+
+    static std::function<bool(std::string const&)>& get_output()
+    {
+        static std::function<bool(std::string const&)> output;
+        return output;
     };
 
     static void helper(message_type type, char const *fmt, ...)
@@ -72,7 +86,7 @@ private:
         }
 #endif
 
-        static char const * const prefix[] =
+        static std::string prefix[]
         {
             "DEBUG",
             "INFO",
@@ -80,14 +94,25 @@ private:
             "ERROR",
         };
 
-        fprintf(stdout, "%s: ", prefix[int(type)]);
+        std::string str = prefix[int(type)] + ": ";
+        size_t pos = str.size();
+
         va_list ap;
         va_start(ap, fmt);
-        vfprintf(stdout, fmt, ap);
+        size_t count = std::vsnprintf(nullptr, 0, fmt, ap);
+        str.resize(pos + count);
+        // This is OK because C++ strings are indeed null-terminated
+        std::vsnprintf(str.data() + pos, count + 1, fmt, ap);
         va_end(ap);
-        fflush(stdout);
+
+        // If a user function was provided, use it, and if it returns true, stop
+        // processing the message immediately.
+        if (auto &fn = get_output(); fn && fn(str))
+            return;
+
+        fprintf(stderr, "%s", str.c_str());
+        fflush(stderr);
     }
 };
 
 } // namespace lol
-
