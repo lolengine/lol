@@ -13,9 +13,9 @@
 #pragma once
 
 #include <cassert>
-#include <cmath>     // std::tan
-#include <algorithm> // std::max
-#include <format>    // std::format
+#include <cmath>      // std::tan
+#include <algorithm>  // std::max
+#include <lol/format> // std::format
 
 namespace lol
 {

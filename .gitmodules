@@ -31,3 +31,9 @@
 	branch = lol
 	update = merge
 	upstream = https://github.com/CLIUtils/CLI11
+
+[submodule "include/lol/3rdparty/fmt"]
+	path = include/lol/3rdparty/fmt
+	url = https://github.com/fmtlib/fmt
+	branch = master
+	update = merge

@@ -21,7 +21,6 @@
 
 #include "../features.h"
 
-#include <format>    // std::format
 #include <vector>    // std::vector
 #include <string>    // std::basic_string
 #include <algorithm> // std::transform

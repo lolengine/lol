@@ -28,6 +28,7 @@ The header-only part of the Lol Engine framework.
 | `<lol/cli>`       | command-line parsing (imported from [cliutils/cli11](https://github.com/CLIUtils/CLI11)) | |
 | `<lol/dialogs>`   | portable file dialogs (imported from [samhocevar/portable-file-dialogs](https://github.com/samhocevar/portable-file-dialogs)) | |
 | `<lol/file>`      | file reading utilities | ● `lol::read(filename, data)` for any `std::string` or `std::vector`<br>● `lol::write(filename, data)` |
+| `<lol/format>`    | ensure `std::format` is available, using a fallback if necessary | |
 | `<lol/msg>`       | simple message logging | ● `lol::msg::info("hello\n");`<br>● `lol::msg::debug("%d %d\n", x, y);`<br>● also `lol::msg::error`, `lol::msg::warn` |
 | `<lol/thread>`    | threading and timing | ● `lol::thread`<br>● `lol::queue<int, 200>` (thread-safe FIFO queue)<br>● `lol::timer` (high precision timer) |
 | `<lol/unit_test>` | unit test framework | |
