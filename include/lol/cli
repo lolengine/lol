@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -11,6 +11,12 @@
 //
 
 #pragma once
+
+// Do not use <filesystem> on systems that do not have it
+#include <version>
+#if defined _LIBCPP_HAS_NO_FILESYSTEM_LIBRARY
+#   define CLI11_HAS_FILESYSTEM 0
+#endif
 
 #include "private/push_macros.h"
 #include "3rdparty/cli11/include/CLI/CLI.hpp"
