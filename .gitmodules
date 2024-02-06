@@ -2,38 +2,38 @@
 	path = include/lol/3rdparty/pegtl
 	url = https://github.com/lolengine/ext-pegtl
 	branch = lol
-	update = merge
+	update = checkout
 	upstream = https://github.com/taocpp/PEGTL
 
 [submodule "mingw-std-threads"]
 	path = include/lol/3rdparty/mingw-std-threads
 	url = https://github.com/lolengine/ext-mingw-std-threads
 	branch = master
-	update = merge
+	update = checkout
 	upstream = https://github.com/meganz/mingw-std-threads
 
 [submodule "step"]
 	path = include/lol/3rdparty/step
 	url = https://github.com/lolengine/ext-step
 	branch = lol
-	update = merge
+	update = checkout
 	upstream = https://github.com/storm-ptr/step
 
 [submodule "portable-file-dialogs"]
 	path = include/lol/3rdparty/portable-file-dialogs
 	url = https://github.com/samhocevar/portable-file-dialogs
 	branch = master
-	update = merge
+	update = checkout
 
 [submodule "cli11"]
 	path = include/lol/3rdparty/cli11
 	url = https://github.com/lolengine/ext-cli11
 	branch = lol
-	update = merge
+	update = checkout
 	upstream = https://github.com/CLIUtils/CLI11
 
 [submodule "include/lol/3rdparty/fmt"]
 	path = include/lol/3rdparty/fmt
 	url = https://github.com/fmtlib/fmt
 	branch = master
-	update = merge
+	update = checkout
