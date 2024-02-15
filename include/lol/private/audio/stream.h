@@ -34,9 +34,11 @@ public:
 
     virtual size_t get(T* buf, size_t frames) = 0;
 
-    size_t channels() const { return m_channels; }
+    inline size_t channels() const { return m_channels; }
 
-    int frequency() const { return m_frequency; }
+    inline int frequency() const { return m_frequency; }
+
+    inline size_t frame_size() const { return channels() * sizeof(T); }
 
     virtual ~stream() = default;
 
@@ -89,7 +91,7 @@ public:
 
     virtual size_t get(T *buf, size_t frames) override
     {
-        memset(buf, 0, frames * this->channels() * sizeof(T));
+        memset(buf, 0, frames * this->frame_size());
 
         std::vector<T> tmp(frames * this->channels());
         for (auto s : m_streamers)
@@ -158,21 +160,52 @@ class resampler : public stream<T>
 public:
     resampler(std::shared_ptr<stream<T>> s, int frequency)
       : stream<T>(s->channels(), frequency),
-        s(s)
+        m_in(s),
+        m_pos(0)
     {}
 
     virtual size_t get(T *buf, size_t frames) override
     {
-        if (s->frequency() == this->frequency())
-            return s->get(buf, frames);
+        if (m_in->frequency() == this->frequency())
+            return m_in->get(buf, frames);
 
-        // FIXME: implement resampling!
-        memset(buf, 0, frames * this->channels() * sizeof(T));
+        double ratio = double(m_in->frequency()) / this->frequency();
+
+        for (size_t n = 0; n < frames; ++n, m_pos += ratio)
+        {
+            // Fill internal buffer if we don’t have enough data
+            while (m_cache.size() / this->channels() < size_t(m_pos) + 2)
+            {
+                // Remove obsolete frames on the left
+                size_t todelete = std::min(size_t(m_pos), m_cache.size() / this->channels());
+                std::vector<T>(m_cache.begin() + todelete * this->channels(), m_cache.end()).swap(m_cache);
+                m_pos -= todelete;
+
+                // Add new frames to the right
+                size_t offset = m_cache.size();
+                m_cache.resize(offset + frames * this->channels());
+                m_in->get(&m_cache[offset], frames);
+            }
+
+            size_t n0 = size_t(m_pos);
+            float alpha = float(m_pos - n0);
+
+            for (size_t ch = 0; ch < this->channels(); ++ch)
+            {
+                buf[n * this->channels() + ch] = m_cache[n0 * this->channels() + ch] * (1.f - alpha)
+                                               + m_cache[(n0 + 1) * this->channels() + ch] * alpha;
+            }
+        }
+
         return frames;
     }
 
 protected:
-    std::shared_ptr<stream<T>> s;
+    std::shared_ptr<stream<T>> m_in;
+
+    std::vector<T> m_cache;
+
+    double m_pos;
 };
 
 template<typename T>
