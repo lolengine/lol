@@ -137,7 +137,7 @@ public:
         s0->get(tmp.data(), frames);
         for (size_t f = 0; f < frames; ++f)
         {
-            buf[f * this->channels()] = tmp[f * s0->channels()];
+            buf[f * this->channels()] = convert_sample<T0, T>(tmp[f * s0->channels()]);
             for (size_t ch = 1; ch < this->channels(); ++ch)
             {
                 size_t ch0 = std::max(size_t(0), s0->channels() - (this->channels() - ch));
