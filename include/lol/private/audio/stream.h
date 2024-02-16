@@ -139,26 +139,67 @@ template<typename T, typename T0>
 class converter : public stream<T>
 {
 public:
-    converter(std::shared_ptr<stream<T0>> s, size_t channels)
-      : stream<T>(channels, s->frequency()),
-        s0(s)
+    converter(std::shared_ptr<stream<T0>> s)
+      : stream<T>(s->channels(), s->frequency()),
+        m_in(s)
     {}
 
     virtual size_t get(T *buf, size_t frames) override
     {
         if constexpr(std::is_same_v<T0, T>)
-            if (this->channels() == s0->channels())
-                return s0->get(buf, frames);
+            return m_in->get(buf, frames);
 
-        std::vector<T0> tmp(frames * s0->channels());
-        s0->get(tmp.data(), frames);
+        size_t samples = frames * this->channels();
+
+        std::vector<T0> tmp(samples);
+        m_in->get(tmp.data(), frames);
+        for (size_t n = 0; n < samples; ++n)
+            buf[n] = convert_sample<T0, T>(tmp[n]);
+
+        return frames;
+    }
+
+protected:
+    std::shared_ptr<stream<T0>> m_in;
+};
+
+template<typename T>
+class mapper : public stream<T>
+{
+public:
+    mapper(std::shared_ptr<stream<T>> s, size_t channels)
+      : stream<T>(channels, s->frequency()),
+        m_in(s)
+    {}
+
+    virtual size_t get(T *buf, size_t frames) override
+    {
+        if (this->channels() == m_in->channels())
+            return m_in->get(buf, frames);
+
+        std::vector<T> tmp(frames * m_in->channels());
+        m_in->get(tmp.data(), frames);
+
+        // FIXME: we need to build a better matrix than this, also maybe the mapper
+        // constructor needs an option to preserve energy or not?
+        std::vector<T> matrix(m_in->channels() * this->channels(), T(1));
+
         for (size_t f = 0; f < frames; ++f)
         {
-            buf[f * this->channels()] = convert_sample<T0, T>(tmp[f * s0->channels()]);
-            for (size_t ch = 1; ch < this->channels(); ++ch)
+            for (size_t out_ch = 0; out_ch < this->channels(); ++out_ch)
             {
-                size_t ch0 = std::max(size_t(0), s0->channels() - (this->channels() - ch));
-                buf[f * this->channels() + ch] = convert_sample<T0, T>(tmp[f * s0->channels() + ch0]);
+                T sample(0);
+                for (size_t in_ch = 0; in_ch < m_in->channels(); ++in_ch)
+                    sample += tmp[f * m_in->channels() + in_ch] * matrix[out_ch * m_in->channels() + in_ch];
+
+                if constexpr (std::is_same_v<T, float>)
+                    buf[f * this->channels() + out_ch] = std::min(1.0f, std::max(-1.0f, sample));
+                else if constexpr (std::is_same_v<T, int16_t>)
+                    buf[f * this->channels() + out_ch] = std::min(int16_t(32767), std::max(int16_t(-32768), sample));
+                else if constexpr (std::is_same_v<T, uint16_t>)
+                    buf[f * this->channels() + out_ch] = std::min(uint16_t(65535), std::max(uint16_t(0), sample));
+                else
+                    buf[f * this->channels() + out_ch] = sample;
             }
         }
 
@@ -166,7 +207,7 @@ public:
     }
 
 protected:
-    std::shared_ptr<stream<T0>> s0;
+    std::shared_ptr<stream<T>> m_in;
 };
 
 template<typename T>
@@ -236,9 +277,15 @@ static inline auto make_generator(F f, size_t channels, int frequency)
 }
 
 template<typename T, typename S0, typename T0 = S0::sample_type>
-static inline auto make_converter(std::shared_ptr<S0> s, size_t channels)
+static inline auto make_converter(std::shared_ptr<S0> s)
 {
-    return std::make_shared<converter<T, T0>>(std::shared_ptr<stream<T0>>(s), channels);
+    return std::make_shared<converter<T, T0>>(std::shared_ptr<stream<T0>>(s));
+}
+
+template<typename S, typename T = S::sample_type>
+static inline auto make_mapper(std::shared_ptr<S> s, size_t channels)
+{
+    return std::make_shared<mapper<T>>(std::shared_ptr<stream<T>>(s), channels);
 }
 
 template<typename S, typename T = S::sample_type>
@@ -250,7 +297,7 @@ static inline auto make_resampler(std::shared_ptr<S> s, int frequency)
 template<typename T, typename S0, typename T0 = S0::sample_type>
 static inline auto make_adapter(std::shared_ptr<S0> s, size_t channels, int frequency)
 {
-    return make_resampler(make_converter<T>(s, channels), frequency);
+    return make_resampler(make_mapper(make_converter<T>(s), channels), frequency);
 }
 
 } // namespace lol::audio
