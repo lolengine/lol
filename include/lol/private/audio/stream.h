@@ -81,31 +81,46 @@ public:
     void add(std::shared_ptr<stream<T>> s)
     {
         // FIXME: check the channel count!
-        m_streamers.insert(s);
+        m_streams.insert(s);
     }
 
     void remove(std::shared_ptr<stream<T>> s)
     {
-        m_streamers.erase(s);
+        m_streams.erase(s);
     }
 
     virtual size_t get(T *buf, size_t frames) override
     {
-        memset(buf, 0, frames * this->frame_size());
+        std::vector<std::vector<T>> buffers;
+        size_t const samples = frames * this->channels();
 
-        std::vector<T> tmp(frames * this->channels());
-        for (auto s : m_streamers)
+        for (auto s : m_streams)
         {
-            s->get(tmp.data(), frames);
-            for (size_t i = 0; i < tmp.size(); ++i)
-                buf[i] += tmp[i];
+            buffers.push_back(std::vector<T>(samples));
+            s->get(buffers.back().data(), frames);
+        }
+
+        for (size_t n = 0; n < samples; ++n)
+        {
+            T sample = T(0);
+            for (auto const &b : buffers)
+                sample += b[n];
+
+            if constexpr (std::is_same_v<T, float>)
+                buf[n] = std::min(1.0f, std::max(-1.0f, sample));
+            else if constexpr (std::is_same_v<T, int16_t>)
+                buf[n] = std::min(int16_t(32767), std::max(int16_t(-32768), sample));
+            else if constexpr (std::is_same_v<T, uint16_t>)
+                buf[n] = std::min(uint16_t(65535), std::max(uint16_t(0), sample));
+            else
+                buf[n] = sample;
         }
 
         return frames;
     }
 
 protected:
-    std::unordered_set<std::shared_ptr<stream<T>>> m_streamers;
+    std::unordered_set<std::shared_ptr<stream<T>>> m_streams;
 };
 
 template<typename T0, typename T>
