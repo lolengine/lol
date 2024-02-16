@@ -222,34 +222,36 @@ public:
 
     virtual size_t get(T *buf, size_t frames) override
     {
-        if (m_in->frequency() == this->frequency())
+        size_t const channels = this->channels();
+        size_t const in_rate = m_in->frequency();
+        size_t const out_rate = this->frequency();
+
+        if (in_rate == out_rate)
             return m_in->get(buf, frames);
 
-        double ratio = double(m_in->frequency()) / this->frequency();
-
-        for (size_t n = 0; n < frames; ++n, m_pos += ratio)
+        for (size_t n = 0; n < frames; ++n, m_pos += in_rate)
         {
             // Fill internal buffer if we don’t have enough data
-            while (m_cache.size() / this->channels() < size_t(m_pos) + 2)
+            while (m_cache.size() / channels < m_pos / out_rate + 2)
             {
                 // Remove obsolete frames on the left
-                size_t todelete = std::min(size_t(m_pos), m_cache.size() / this->channels());
-                std::vector<T>(m_cache.begin() + todelete * this->channels(), m_cache.end()).swap(m_cache);
-                m_pos -= todelete;
+                size_t todelete = std::min(m_pos / out_rate, m_cache.size() / channels);
+                std::vector<T>(m_cache.begin() + todelete * channels, m_cache.end()).swap(m_cache);
+                m_pos -= todelete * out_rate;
 
                 // Add new frames to the right
                 size_t offset = m_cache.size();
-                m_cache.resize(offset + frames * this->channels());
+                m_cache.resize(offset + frames * channels);
                 m_in->get(&m_cache[offset], frames);
             }
 
-            size_t n0 = size_t(m_pos);
-            float alpha = float(m_pos - n0);
+            size_t n0 = m_pos / out_rate;
+            float alpha = float(m_pos % out_rate) / out_rate;
 
-            for (size_t ch = 0; ch < this->channels(); ++ch)
+            for (size_t ch = 0; ch < channels; ++ch)
             {
-                buf[n * this->channels() + ch] = m_cache[n0 * this->channels() + ch] * (1.f - alpha)
-                                               + m_cache[(n0 + 1) * this->channels() + ch] * alpha;
+                *buf++ = m_cache[n0 * channels + ch] * (1.f - alpha)
+                       + m_cache[(n0 + 1) * channels + ch] * alpha;
             }
         }
 
@@ -261,7 +263,7 @@ protected:
 
     std::vector<T> m_cache;
 
-    double m_pos;
+    size_t m_pos;
 };
 
 template<typename T>
