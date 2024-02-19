@@ -27,6 +27,48 @@
 namespace lol::audio
 {
 
+class sample
+{
+public:
+    // Convert samples between different types (float, int16_t, uint8_t, …)
+    template<typename FROM, typename TO>
+    static inline TO convert(FROM x)
+    {
+        constexpr auto from_fp = std::is_floating_point_v<FROM>;
+        constexpr auto from_signed = !from_fp && std::is_signed_v<FROM>;
+        constexpr auto to_fp = std::is_floating_point_v<TO>;
+        constexpr auto to_signed = !to_fp && std::is_signed_v<TO>;
+
+        if constexpr (std::is_same_v<FROM, TO> || (from_fp && to_fp))
+        {
+            // If types are the same, or both floating-point, no conversion is needed
+            return TO(x);
+        }
+        else if constexpr (from_fp)
+        {
+            // From floating point to integer:
+            //  - renormalise to 0…1
+            //  - multiply by the size of the integer range
+            //  - add min, round down, and clamp to min…max
+            FROM constexpr min(std::numeric_limits<TO>::min());
+            FROM constexpr max(std::numeric_limits<TO>::max());
+            x = (x + 1) * ((max - min + 1) / 2);
+            return TO(std::max(min, std::min(max, std::floor(x + min))));
+        }
+        else if constexpr (to_fp)
+        {
+            TO constexpr min(std::numeric_limits<FROM>::min());
+            TO constexpr max(std::numeric_limits<FROM>::max());
+            return (TO(x) - min) * 2 / (max - min) - 1;
+        }
+        else
+        {
+            // FIXME: this is better than nothing but we need a better implementation
+            return convert<double, TO>(convert<FROM, double>(x));
+        }
+    }
+};
+
 template<typename T>
 class stream
 {
@@ -124,42 +166,6 @@ protected:
     std::unordered_set<std::shared_ptr<stream<T>>> m_streams;
 };
 
-// Convert samples from and to different types (float, int16_t, uint8_t, …)
-template<typename T0, typename T>
-static inline T convert_sample(T0 x)
-{
-    constexpr auto from_fp = std::is_floating_point_v<T0>;
-    constexpr auto from_signed = !from_fp && std::is_signed_v<T0>;
-    constexpr auto to_fp = std::is_floating_point_v<T>;
-    constexpr auto to_signed = !to_fp && std::is_signed_v<T>;
-
-    if constexpr (std::is_same_v<T0, T> || (from_fp && to_fp))
-    {
-        // If types are the same, or both floating-point, no conversion is needed
-        return T(x);
-    }
-    else if constexpr (from_fp)
-    {
-        // From floating point to integer
-        if constexpr (to_signed)
-            x = (x + T0(1.0)) * T0(0.5);
-        return T(x * std::numeric_limits<T>::max());
-    }
-    else if constexpr (to_fp)
-    {
-        // From integer to floating point
-        if constexpr (from_signed)
-            return x / -T(std::numeric_limits<T0>::min());
-        else
-            return x / (T(std::numeric_limits<T0>::max()) * T(0.5)) - T(1.0);
-    }
-    else
-    {
-        // FIXME: this is better than nothing but we need a better implementation
-        return convert_sample<double, T>(convert_sample<T0, double>(x));
-    }
-}
-
 template<typename T, typename T0>
 class converter : public stream<T>
 {
@@ -179,7 +185,7 @@ public:
         std::vector<T0> tmp(samples);
         m_in->get(tmp.data(), frames);
         for (size_t n = 0; n < samples; ++n)
-            buf[n] = convert_sample<T0, T>(tmp[n]);
+            buf[n] = sample::convert<T0, T>(tmp[n]);
 
         return frames;
     }

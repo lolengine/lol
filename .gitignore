@@ -1,3 +1,6 @@
 # Editor cruft
 .*.swp
 *~
+# Binaries
+*.exe
+t/test
