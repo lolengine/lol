@@ -50,7 +50,7 @@ public:
             //  - add min, round down, and clamp to min…max
             FROM constexpr min(std::numeric_limits<TO>::min());
             FROM constexpr max(std::numeric_limits<TO>::max());
-            x = (x + 1) * ((max - min + 1) / 2);
+            x = (max - min + 1) / 2 * (x + 1);
             return TO(std::max(min, std::min(max, std::floor(x + min))));
         }
         else if constexpr (to_fp)
@@ -60,33 +60,25 @@ public:
             //  - change range from 0…1 to -1…1
             TO constexpr min(std::numeric_limits<FROM>::min());
             TO constexpr max(std::numeric_limits<FROM>::max());
-            return (TO(x) - min) * 2 / (max - min) - 1;
+            return 2 / (max - min) * (TO(x) - min) - 1;
         }
         else
         {
+            // Conversion between integer types:
+            //  - convert to unsigned
+            //  - shift right or multiply by a magic constant such as 0x0101 to propagate bytes
+            //  - convert back to signed if necessary
+            // Most operations are done using the UBIG type, which is an unsigned integer type
+            // at least as large as FROM and TO.
             using UFROM = std::make_unsigned_t<FROM>;
             using UTO = std::make_unsigned_t<TO>;
+            using UBIG = std::conditional_t<(sizeof(FROM) > sizeof(TO)), UFROM, UTO>;
 
-            if constexpr (sizeof(FROM) > sizeof(TO))
-            {
-                // From a larger integer type to a smaller integer type:
-                //  - convert to unsigned
-                //  - shift right
-                //  - convert back to signed if necessary
-                UFROM constexpr m = UFROM(1) << (8 * (sizeof(FROM) - sizeof(TO)));
-                UFROM tmp = UFROM(UFROM(x) - UFROM(std::numeric_limits<FROM>::min())) / m;
-                return TO(UTO(tmp) + UTO(std::numeric_limits<TO>::min()));
-            }
-            else
-            {
-                // From a smaller integer type to a larger integer type:
-                //  - convert to unsigned
-                //  - multiply by a magic constant such as 0x01010101 to propagate bytes
-                //  - convert back to signed if necessary
-                UTO constexpr m = std::numeric_limits<UTO>::max() / std::numeric_limits<UFROM>::max();
-                UTO tmp = UFROM(UFROM(x) - UFROM(std::numeric_limits<FROM>::min())) * m;
-                return TO(UTO(tmp) + UTO(std::numeric_limits<TO>::min()));
-            }
+            UBIG constexpr div = UBIG(1) << 8 * (sizeof(UBIG) - sizeof(UTO));
+            UBIG constexpr mul = std::numeric_limits<UBIG>::max() / std::numeric_limits<UFROM>::max();
+            auto tmp = UFROM(UFROM(x) - UFROM(std::numeric_limits<FROM>::min())) * mul / div;
+
+            return TO(UTO(tmp) + UTO(std::numeric_limits<TO>::min()));
         }
     }
 };
