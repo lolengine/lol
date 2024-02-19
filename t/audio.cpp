@@ -1,7 +1,7 @@
 #include <lol/lib/doctest_main>
 #include <lol/audio/stream>
 
-TEST_CASE("sample conversion between floating point types")
+TEST_CASE("sample conversion: float|double ←→ float|double")
 {
     auto cv1 = lol::audio::sample::convert<float, float>;
     CHECK(cv1(-1.0f) == -1.0f);
@@ -24,7 +24,7 @@ TEST_CASE("sample conversion between floating point types")
     CHECK(cv4( 1.0) ==  1.0);
 }
 
-TEST_CASE("sample conversion from float to 8-bit")
+TEST_CASE("sample conversion: float → int8|uint8")
 {
     auto cv1 = lol::audio::sample::convert<float, int8_t>;
     CHECK(cv1(-1.5f) == -0x80);
@@ -45,18 +45,30 @@ TEST_CASE("sample conversion from float to 8-bit")
     CHECK(cv2( 1.5f) == 0xff);
 }
 
-TEST_CASE("sample conversion from 8-bit to float")
+TEST_CASE("sample conversion: int8|uint8 → float")
 {
     auto cv1 = lol::audio::sample::convert<int8_t, float>;
     CHECK(cv1(-0x80) == -1.0f);
     CHECK(cv1( 0x7f) ==  1.0f);
 
+    for (int n = -0x80; n < 0x7f; ++n)
+    {
+        CAPTURE(n);
+        CHECK(cv1(n) < cv1(n + 1));
+    }
+
     auto cv2 = lol::audio::sample::convert<uint8_t, float>;
     CHECK(cv2(0x00) == -1.0f);
     CHECK(cv2(0xff) ==  1.0f);
+
+    for (int n = 0x00; n < 0xff; ++n)
+    {
+        CAPTURE(n);
+        CHECK(cv2(n) < cv2(n + 1));
+    }
 }
 
-TEST_CASE("sample conversion from float to 16-bit")
+TEST_CASE("sample conversion: float → int16|uint16")
 {
     auto cv1 = lol::audio::sample::convert<float, int16_t>;
     CHECK(cv1(-1.5f) == -0x8000);
@@ -77,18 +89,30 @@ TEST_CASE("sample conversion from float to 16-bit")
     CHECK(cv2( 1.5f) == 0xffff);
 }
 
-TEST_CASE("sample conversion from 16-bit to float")
+TEST_CASE("sample conversion: int16|uint16 → float")
 {
     auto cv1 = lol::audio::sample::convert<int16_t, float>;
     CHECK(cv1(-0x8000) == -1.0f);
     CHECK(cv1( 0x7fff) ==  1.0f);
 
+    for (int n = -0x8000; n < 0x7fff; ++n)
+    {
+        CAPTURE(n);
+        CHECK(cv1(n) < cv1(n + 1));
+    }
+
     auto cv2 = lol::audio::sample::convert<uint16_t, float>;
     CHECK(cv2(0x0000) == -1.0f);
     CHECK(cv2(0xffff) ==  1.0f);
+
+    for (int n = 0x0000; n < 0xffff; ++n)
+    {
+        CAPTURE(n);
+        CHECK(cv2(n) < cv2(n + 1));
+    }
 }
 
-TEST_CASE("sample conversion between signed and unsigned 8-bit")
+TEST_CASE("sample conversion: int8 ←→ uint8")
 {
     auto cv1 = lol::audio::sample::convert<int8_t, uint8_t>;
     CHECK(cv1(-0x80) == 0x00);
@@ -107,7 +131,7 @@ TEST_CASE("sample conversion between signed and unsigned 8-bit")
     CHECK(cv2(0xff) ==  0x7f);
 }
 
-TEST_CASE("sample conversion from 16-bit to 8-bit")
+TEST_CASE("sample conversion: int16|uint16 → int8")
 {
     auto cv1 = lol::audio::sample::convert<int16_t, int8_t>;
     CHECK(cv1(-0x8000) == -0x80);
@@ -130,7 +154,7 @@ TEST_CASE("sample conversion from 16-bit to 8-bit")
     CHECK(cv2(0xffff) ==  0x7f);
 }
 
-TEST_CASE("round-trip conversion from 8-bit to 8-bit")
+TEST_CASE("sample conversion: int8 → float → int8")
 {
     auto cv1 = lol::audio::sample::convert<int8_t, float>;
     auto cv2 = lol::audio::sample::convert<float, int8_t>;
