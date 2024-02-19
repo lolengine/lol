@@ -19,6 +19,7 @@
 //
 
 #include <functional> // std::function
+#include <limits> // std::numeric_limits
 #include <memory> // std::shared_ptr
 #include <type_traits> // std::is_same_v
 #include <unordered_set> // std::unordered_set
@@ -123,17 +124,41 @@ protected:
     std::unordered_set<std::shared_ptr<stream<T>>> m_streams;
 };
 
+// Convert samples from and to different types (float, int16_t, uint8_t, …)
 template<typename T0, typename T>
-static inline T convert_sample(T0);
+static inline T convert_sample(T0 x)
+{
+    constexpr auto from_fp = std::is_floating_point_v<T0>;
+    constexpr auto from_signed = !from_fp && std::is_signed_v<T0>;
+    constexpr auto to_fp = std::is_floating_point_v<T>;
+    constexpr auto to_signed = !to_fp && std::is_signed_v<T>;
 
-template<>
-inline float convert_sample(float x) { return x; }
-
-template<>
-inline float convert_sample(int16_t x) { return x / 32768.0f; }
-
-template<>
-inline float convert_sample(uint16_t x) { return x / 32767.0f - 1.0f; }
+    if constexpr (std::is_same_v<T0, T> || (from_fp && to_fp))
+    {
+        // If types are the same, or both floating-point, no conversion is needed
+        return T(x);
+    }
+    else if constexpr (from_fp)
+    {
+        // From floating point to integer
+        if constexpr (to_signed)
+            x = (x + T0(1.0)) * T0(0.5);
+        return T(x * std::numeric_limits<T>::max());
+    }
+    else if constexpr (to_fp)
+    {
+        // From integer to floating point
+        if constexpr (from_signed)
+            return x / -T(std::numeric_limits<T0>::min());
+        else
+            return x / (T(std::numeric_limits<T0>::max()) * T(0.5)) - T(1.0);
+    }
+    else
+    {
+        // FIXME: this is better than nothing but we need a better implementation
+        return convert_sample<double, T>(convert_sample<T0, double>(x));
+    }
+}
 
 template<typename T, typename T0>
 class converter : public stream<T>
@@ -146,7 +171,7 @@ public:
 
     virtual size_t get(T *buf, size_t frames) override
     {
-        if constexpr(std::is_same_v<T0, T>)
+        if constexpr (std::is_same_v<T0, T>)
             return m_in->get(buf, frames);
 
         size_t samples = frames * this->channels();
