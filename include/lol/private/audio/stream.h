@@ -35,9 +35,7 @@ public:
     static inline TO convert(FROM x)
     {
         constexpr auto from_fp = std::is_floating_point_v<FROM>;
-        constexpr auto from_signed = !from_fp && std::is_signed_v<FROM>;
         constexpr auto to_fp = std::is_floating_point_v<TO>;
-        constexpr auto to_signed = !to_fp && std::is_signed_v<TO>;
 
         if constexpr (std::is_same_v<FROM, TO> || (from_fp && to_fp))
         {
@@ -47,7 +45,7 @@ public:
         else if constexpr (from_fp)
         {
             // From floating point to integer:
-            //  - renormalise to 0…1
+            //  - change range from -1…1 to 0…1
             //  - multiply by the size of the integer range
             //  - add min, round down, and clamp to min…max
             FROM constexpr min(std::numeric_limits<TO>::min());
@@ -57,14 +55,38 @@ public:
         }
         else if constexpr (to_fp)
         {
+            // From integer to floating point:
+            //  - compute (x - min) / (max - min)
+            //  - change range from 0…1 to -1…1
             TO constexpr min(std::numeric_limits<FROM>::min());
             TO constexpr max(std::numeric_limits<FROM>::max());
             return (TO(x) - min) * 2 / (max - min) - 1;
         }
         else
         {
-            // FIXME: this is better than nothing but we need a better implementation
-            return convert<double, TO>(convert<FROM, double>(x));
+            using UFROM = std::make_unsigned_t<FROM>;
+            using UTO = std::make_unsigned_t<TO>;
+
+            if constexpr (sizeof(FROM) > sizeof(TO))
+            {
+                // From a larger integer type to a smaller integer type:
+                //  - convert to unsigned
+                //  - shift right
+                //  - convert back to signed if necessary
+                UFROM constexpr m = UFROM(1) << (8 * (sizeof(FROM) - sizeof(TO)));
+                UFROM tmp = UFROM(UFROM(x) - UFROM(std::numeric_limits<FROM>::min())) / m;
+                return TO(UTO(tmp) + UTO(std::numeric_limits<TO>::min()));
+            }
+            else
+            {
+                // From a smaller integer type to a larger integer type:
+                //  - convert to unsigned
+                //  - multiply by a magic constant such as 0x01010101 to propagate bytes
+                //  - convert back to signed if necessary
+                UTO constexpr m = std::numeric_limits<UTO>::max() / std::numeric_limits<UFROM>::max();
+                UTO tmp = UFROM(UFROM(x) - UFROM(std::numeric_limits<FROM>::min())) * m;
+                return TO(UTO(tmp) + UTO(std::numeric_limits<TO>::min()));
+            }
         }
     }
 };
