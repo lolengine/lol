@@ -303,25 +303,25 @@ static inline auto make_generator(F f, size_t channels, int frequency)
     return make_generator(std::function(f), channels, frequency);
 }
 
-template<typename T, typename S0, typename T0 = S0::sample_type>
+template<typename T, typename S0, typename T0 = typename S0::sample_type>
 static inline auto make_converter(std::shared_ptr<S0> s)
 {
     return std::make_shared<converter<T, T0>>(std::shared_ptr<stream<T0>>(s));
 }
 
-template<typename S, typename T = S::sample_type>
+template<typename S, typename T = typename S::sample_type>
 static inline auto make_mapper(std::shared_ptr<S> s, size_t channels)
 {
     return std::make_shared<mapper<T>>(std::shared_ptr<stream<T>>(s), channels);
 }
 
-template<typename S, typename T = S::sample_type>
+template<typename S, typename T = typename S::sample_type>
 static inline auto make_resampler(std::shared_ptr<S> s, int frequency)
 {
     return std::make_shared<resampler<T>>(std::shared_ptr<stream<T>>(s), frequency);
 }
 
-template<typename T, typename S0, typename T0 = S0::sample_type>
+template<typename T, typename S0, typename T0 = typename S0::sample_type>
 static inline auto make_adapter(std::shared_ptr<S0> s, size_t channels, int frequency)
 {
     return make_resampler(make_mapper(make_converter<T>(s), channels), frequency);
