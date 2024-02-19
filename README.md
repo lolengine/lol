@@ -31,14 +31,12 @@ The header-only part of the Lol Engine framework.
 | `<lol/format>`    | ensure `std::format` is available, using a fallback if necessary | |
 | `<lol/msg>`       | simple message logging | ● `lol::msg::info("hello\n");`<br>● `lol::msg::debug("%d %d\n", x, y);`<br>● also `lol::msg::error`, `lol::msg::warn` |
 | `<lol/thread>`    | threading and timing | ● `lol::thread`<br>● `lol::queue<int, 200>` (thread-safe FIFO queue)<br>● `lol::timer` (high precision timer) |
-| `<lol/unit_test>` | unit test framework | |
 | `<lol/utils>`     | various utilities: environment variables, std::map and std::vector extensions… | |
 
 ## Text utilities
 
 | header | description | examples |
 |--------|-------------|----------|
-| `<lol/pegtl>`             | the PEGTL parser (imported from [taocpp/pegtl](https://github.com/taocpp/PEGTL)) | |
 | `<lol/algo/suffix_array>` | suffix array for fast string searches (imported from [storm-ptr/step](https://github.com/storm-ptr/step)) | |
 
 ## Graphics
@@ -48,3 +46,10 @@ The header-only part of the Lol Engine framework.
 | `<lol/color>` | colorspace conversions (RGB, sRGB, HSV…) | |
 | `<lol/image>` | image loading, saving, and processing | |
 
+## External libraries
+
+| header | description |
+|--------|-------------|
+| `<lol/lib/pegtl>`   | the PEGTL parser (imported from [taocpp/pegtl](https://github.com/taocpp/PEGTL)) |
+| `<lol/lib/doctest>` | the doctest unit test framework (imported from [doctest/doctest](https://github.com/doctest/doctest)) |
+| `<lol/lib/doctest_main>` | a version of doctest that implements `main()` |

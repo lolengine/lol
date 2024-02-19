@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -12,7 +12,10 @@
 
 #pragma once
 
-#include "private/push_macros.h"
-#include "private/lolunit.h"
-#include "private/pop_macros.h"
+//
+// The doctest library
+// ———————————————————
+//
 
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "../3rdparty/doctest/doctest/doctest.h"

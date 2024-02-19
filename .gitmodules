@@ -32,8 +32,14 @@
 	update = checkout
 	upstream = https://github.com/CLIUtils/CLI11
 
-[submodule "include/lol/3rdparty/fmt"]
+[submodule "fmt"]
 	path = include/lol/3rdparty/fmt
 	url = https://github.com/fmtlib/fmt
+	branch = master
+	update = checkout
+
+[submodule "doctest"]
+	path = include/lol/3rdparty/doctest
+	url = https://github.com/doctest/doctest
 	branch = master
 	update = checkout
