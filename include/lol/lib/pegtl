@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -24,5 +24,4 @@
 #   define _WIN32_WINNT 0x0602
 #endif
 
-#include "3rdparty/pegtl/include/tao/pegtl.hpp"
-
+#include "../3rdparty/pegtl/include/tao/pegtl.hpp"
