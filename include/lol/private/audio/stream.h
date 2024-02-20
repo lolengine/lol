@@ -18,6 +18,7 @@
 // Stream, mix, and apply audio effects.
 //
 
+#include <cmath> // std::floor
 #include <functional> // std::function
 #include <limits> // std::numeric_limits
 #include <memory> // std::shared_ptr
