@@ -1,4 +1,4 @@
-#include <lol/lib/doctest_main>
+#include <lol/lib/doctest>
 #include <lol/audio/stream>
 
 TEST_CASE("sample conversion: float|double ←→ float|double")

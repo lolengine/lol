@@ -40,7 +40,7 @@ public:
 
         if constexpr (std::is_same_v<FROM, TO> || (from_fp && to_fp))
         {
-            // If types are the same, or both floating-point, no conversion is needed
+            // If types are the same, or both floating point, no conversion is needed
             return TO(x);
         }
         else if constexpr (from_fp)
@@ -68,8 +68,8 @@ public:
             // When converting between integer types, we first convert to an unsigned
             // type of same size as source (e.g. int16_t → uint16_t) to ensure that all
             // operations will happen modulo n (not guaranteed with signed types).
-            // The next step is to shift right (drop bits) or promote left (multiplying
-            // by a magic constant such as 0x1010101 or 0x10001). This happens using the
+            // The next step is to shift right (drop bits) or promote left (multiply by
+            // a magic constant such as 0x1010101 or 0x10001). This happens using the
             // UBIG type, which is an unsigned integer type at least as large as FROM
             // and TO.
             // Finally, we convert back to signed (e.g. uint16_t → int16_t) if necessary.
@@ -82,6 +82,49 @@ public:
             auto tmp = UFROM(UFROM(x) - UFROM(std::numeric_limits<FROM>::min())) * mul / div;
 
             return TO(tmp + UTO(std::numeric_limits<TO>::min()));
+        }
+    }
+
+    // Saturated addition for samples
+    template<typename T>
+    static inline T sadd(T x, T y)
+    {
+        if constexpr (std::is_floating_point_v<T>)
+        {
+            // No saturation for floating point types
+            return x + y;
+        }
+        else if constexpr (sizeof(T) <= 4)
+        {
+            // For integer types up to 32-bit, do the computation with a larger type
+            using BIG = std::conditional_t<sizeof(T) == 1, int16_t,
+                        std::conditional_t<sizeof(T) == 2, int32_t,
+                        std::conditional_t<sizeof(T) == 4, int64_t, void>>>;
+            BIG constexpr min = std::numeric_limits<T>::min();
+            BIG constexpr max = std::numeric_limits<T>::max();
+            BIG constexpr zero = (min + max + 1) >> 1;
+
+            return T(std::max(min, std::min(max, BIG(BIG(x) + BIG(y) - zero))));
+        }
+        else if constexpr (std::is_unsigned_v<T>)
+        {
+            // Unsigned saturated add for 64-bit and larger: clamp according to overflow
+            T constexpr zero = T(1) << 8 * sizeof(T) - 1;
+            T constexpr minus_one = zero - T(1);
+            T ret = x + y;
+            return ret >= x ? std::max(zero, ret) - zero : std::min(minus_one, ret) + zero;
+        }
+        else
+        {
+            // Signed saturated add for 64-bit and larger: if signs differ, no overflow
+            // occurred, just return the sum of the arguments; otherwise, clamp according
+            // to the arguments sign.
+            using U = std::make_unsigned_t<T>;
+            U constexpr umax = U(std::numeric_limits<T>::max());
+            U constexpr umin = U(std::numeric_limits<T>::min());
+            U ret = U(x) + U(y);
+
+            return T(x ^ y) < 0 ? T(ret) : x >= 0 ? T(std::min(ret, umax)) : T(std::max(ret, umin));
         }
     }
 };
@@ -162,18 +205,12 @@ public:
 
         for (size_t n = 0; n < samples; ++n)
         {
-            T sample = T(0);
-            for (auto const &b : buffers)
-                sample += b[n];
+            T x = T(0);
 
-            if constexpr (std::is_same_v<T, float>)
-                buf[n] = std::min(1.0f, std::max(-1.0f, sample));
-            else if constexpr (std::is_same_v<T, int16_t>)
-                buf[n] = std::min(int16_t(32767), std::max(int16_t(-32768), sample));
-            else if constexpr (std::is_same_v<T, uint16_t>)
-                buf[n] = std::min(uint16_t(65535), std::max(uint16_t(0), sample));
-            else
-                buf[n] = sample;
+            for (auto const &b : buffers)
+                x = sample::sadd(x, b[n]);
+
+            buf[n] = x;
         }
 
         return frames;
@@ -236,18 +273,12 @@ public:
         {
             for (size_t out_ch = 0; out_ch < this->channels(); ++out_ch)
             {
-                T sample(0);
-                for (size_t in_ch = 0; in_ch < m_in->channels(); ++in_ch)
-                    sample += tmp[f * m_in->channels() + in_ch] * matrix[out_ch * m_in->channels() + in_ch];
+                T x(0);
 
-                if constexpr (std::is_same_v<T, float>)
-                    buf[f * this->channels() + out_ch] = std::min(1.0f, std::max(-1.0f, sample));
-                else if constexpr (std::is_same_v<T, int16_t>)
-                    buf[f * this->channels() + out_ch] = std::min(int16_t(32767), std::max(int16_t(-32768), sample));
-                else if constexpr (std::is_same_v<T, uint16_t>)
-                    buf[f * this->channels() + out_ch] = std::min(uint16_t(65535), std::max(uint16_t(0), sample));
-                else
-                    buf[f * this->channels() + out_ch] = sample;
+                for (size_t in_ch = 0; in_ch < m_in->channels(); ++in_ch)
+                    x = sample::sadd(x, tmp[f * m_in->channels() + in_ch] * matrix[out_ch * m_in->channels() + in_ch]);
+
+                buf[f * this->channels() + out_ch] = x;
             }
         }
 

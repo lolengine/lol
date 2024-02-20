@@ -1,5 +1,5 @@
 
-SRC = audio.cpp
+SRC = test.cpp audio-convert.cpp audio-sadd.cpp
 
 all: test
 
