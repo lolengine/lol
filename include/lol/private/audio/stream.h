@@ -64,21 +64,23 @@ public:
         }
         else
         {
-            // Conversion between integer types:
-            //  - convert to unsigned
-            //  - shift right or multiply by a magic constant such as 0x0101 to propagate bytes
-            //  - convert back to signed if necessary
-            // Most operations are done using the UBIG type, which is an unsigned integer type
-            // at least as large as FROM and TO.
+            // When converting between integer types, we first convert to an unsigned
+            // type of same size as source (e.g. int16_t → uint16_t) to ensure that all
+            // operations will happen modulo n (not guaranteed with signed types).
+            // The next step is to shift right (drop bits) or promote left (multiplying
+            // by a magic constant such as 0x1010101 or 0x10001). This happens using the
+            // UBIG type, which is an unsigned integer type at least as large as FROM
+            // and TO.
+            // Finally, we convert back to signed (e.g. uint16_t → int16_t) if necessary.
             using UFROM = std::make_unsigned_t<FROM>;
             using UTO = std::make_unsigned_t<TO>;
             using UBIG = std::conditional_t<(sizeof(FROM) > sizeof(TO)), UFROM, UTO>;
 
-            UBIG constexpr div = UBIG(1) << 8 * (sizeof(UBIG) - sizeof(UTO));
             UBIG constexpr mul = std::numeric_limits<UBIG>::max() / std::numeric_limits<UFROM>::max();
+            UBIG constexpr div = UBIG(1) << 8 * (sizeof(UBIG) - sizeof(UTO));
             auto tmp = UFROM(UFROM(x) - UFROM(std::numeric_limits<FROM>::min())) * mul / div;
 
-            return TO(UTO(tmp) + UTO(std::numeric_limits<TO>::min()));
+            return TO(tmp + UTO(std::numeric_limits<TO>::min()));
         }
     }
 };
