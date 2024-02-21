@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -12,13 +12,10 @@
 
 #pragma once
 
-#include <string>   // std::string
-#include <cstdlib>  // _dupenv_s / std::getenv
+#include <cstdlib> // _dupenv_s / std::getenv
+#include <string> // std::string
 
-namespace lol
-{
-
-namespace sys
+namespace lol::sys
 {
 
 static inline std::string getenv(std::string const &var)
@@ -32,13 +29,11 @@ static inline std::string getenv(std::string const &var)
         free(buf);
         return ret;
     }
-#else
+#elif !__SCE__
     if (auto val = std::getenv(var.c_str()))
         return std::string(val);
 #endif
     return std::string();
 }
 
-} // namespace os
-
-} // namespace lol
+} // namespace sys::lol
