@@ -1,0 +1,33 @@
+//
+//  Lol Engine
+//
+//  Copyright © 2010–2024 Sam Hocevar <sam@hocevar.net>
+//
+//  Lol Engine is free software. It comes without any warranty, to
+//  the extent permitted by applicable law. You can redistribute it
+//  and/or modify it under the terms of the Do What the Fuck You Want
+//  to Public License, Version 2, as published by the WTFPL Task Force.
+//  See http://www.wtfpl.net/ for more details.
+//
+
+#pragma once
+
+// CLI11 unconditionally uses std::getenv, which is not available on SCE platforms
+#if defined __SCE__
+namespace std { static auto getenv = [](char const *) { return nullptr; }; }
+#endif
+
+// Tell CLI11 to not use <filesystem> on systems that do not have it, but before
+// that, do not use <version> on systems that do not have it.
+#if !defined __SCE__
+#   include <version>
+#   if defined _LIBCPP_HAS_NO_FILESYSTEM_LIBRARY
+#       define CLI11_HAS_FILESYSTEM 0
+#   endif
+#endif
+
+// The CLI11 library
+#include "../3rdparty/cli11/include/CLI/CLI.hpp"
+
+// Create a lol::cli::app alias for CLI::App
+namespace lol::cli { using app = CLI::App; };

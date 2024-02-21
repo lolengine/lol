@@ -25,7 +25,6 @@ The header-only part of the Lol Engine framework.
 
 | header | description | examples |
 |--------|-------------|----------|
-| `<lol/cli>`       | command-line parsing (imported from [cliutils/cli11](https://github.com/CLIUtils/CLI11)) | |
 | `<lol/dialogs>`   | portable file dialogs (imported from [samhocevar/portable-file-dialogs](https://github.com/samhocevar/portable-file-dialogs)) | |
 | `<lol/file>`      | file reading utilities | ● `lol::read(filename, data)` for any `std::string` or `std::vector`<br>● `lol::write(filename, data)` |
 | `<lol/format>`    | ensure `std::format` is available, using a fallback if necessary | |
@@ -50,6 +49,7 @@ The header-only part of the Lol Engine framework.
 
 | header | description |
 |--------|-------------|
-| `<lol/lib/pegtl>`   | the PEGTL parser (imported from [taocpp/pegtl](https://github.com/taocpp/PEGTL)) |
+| `<lol/lib/cli11>`   | the CLI11 command-line parsing library (imported from [cliutils/cli11](https://github.com/CLIUtils/CLI11)) | |
 | `<lol/lib/doctest>` | the doctest unit test framework (imported from [doctest/doctest](https://github.com/doctest/doctest)) |
 | `<lol/lib/doctest_main>` | a version of doctest that implements `main()` |
+| `<lol/lib/pegtl>`   | the PEGTL parser (imported from [taocpp/pegtl](https://github.com/taocpp/PEGTL)) |
