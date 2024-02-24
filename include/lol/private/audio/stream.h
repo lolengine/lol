@@ -127,6 +127,35 @@ public:
             return T(x ^ y) < 0 ? T(ret) : x >= 0 ? T(std::min(ret, umax)) : T(std::max(ret, umin));
         }
     }
+
+    // Clipping for samples
+    template<typename T>
+    static inline T clip(T x)
+    {
+        if constexpr (std::is_floating_point_v<T>)
+        {
+            return std::min(T(1), std::max(T(-1), x));
+        }
+        else
+        {
+            // Clipping is only relevant for floating point types
+            return x;
+        }
+    }
+
+    template<typename T>
+    static inline T softclip(T x)
+    {
+        if constexpr (std::is_floating_point_v<T>)
+        {
+            return std::tanh(x);
+        }
+        else
+        {
+            // Clipping is only relevant for floating point types
+            return x;
+        }
+    }
 };
 
 template<typename T>
