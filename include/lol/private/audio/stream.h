@@ -19,6 +19,7 @@
 //
 
 #include <cmath> // std::floor
+#include "../math/constants.h" // F_PI
 #include <functional> // std::function
 #include <limits> // std::numeric_limits
 #include <memory> // std::shared_ptr
@@ -337,10 +338,33 @@ public:
         if (in_rate == out_rate)
             return m_in->get(buf, frames);
 
+        // 16 taps lanczos filter
+        const size_t window_size = 16;
+        const float window_center = 8.0f;
+
+        const size_t constexpr lanczos_size = window_size * 64;
+        const float lanczos_lut_scale = (lanczos_size - 1) / (window_center + 1.0f);
+
+        static auto build_lanczos = [&]()
+        {
+            std::array<float, lanczos_size> ret;
+            for (int k = 0; k < lanczos_size; ++k)
+            {
+                float dist = float(k) * F_PI / lanczos_lut_scale;
+                float lanczos = 1.0f;
+                if (dist > 0.0f) lanczos = window_center * std::sinf(dist) * std::sinf(dist / window_center) / (dist * dist);
+                ret[k] = lanczos;
+            }
+            return ret;
+        };
+
+        static auto const lanczos_lut = build_lanczos();
+        
+
         for (size_t n = 0; n < frames; ++n, m_pos += in_rate)
         {
             // Fill internal buffer if we don’t have enough data
-            while (m_cache.size() / channels < m_pos / out_rate + 2)
+            while (m_cache.size() / channels < m_pos / out_rate + window_size)
             {
                 // Remove obsolete frames on the left
                 size_t todelete = std::min(m_pos / out_rate, m_cache.size() / channels);
@@ -358,8 +382,15 @@ public:
 
             for (size_t ch = 0; ch < channels; ++ch)
             {
-                *buf++ = m_cache[n0 * channels + ch] * (1.f - alpha)
-                       + m_cache[(n0 + 1) * channels + ch] * alpha;
+                // lanczos upsampling
+                T value = T();
+                for (size_t wi = 0; wi < window_size; ++wi)
+                {
+                    float dist = std::abs(wi - window_center - alpha);
+                    float lanczos = lanczos_lut[int(dist * lanczos_lut_scale)];
+                    value += m_cache[(n0 + wi) * channels + ch] * lanczos;
+                }
+                *buf++ = value;
             }
         }
 
