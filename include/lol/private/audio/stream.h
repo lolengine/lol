@@ -352,14 +352,13 @@ public:
             {
                 float dist = float(k) * F_PI / lanczos_lut_scale;
                 float lanczos = 1.0f;
-                if (dist > 0.0f) lanczos = window_center * std::sinf(dist) * std::sinf(dist / window_center) / (dist * dist);
+                if (dist > 0.0f) lanczos = window_center * std::sin(dist) * std::sin(dist / window_center) / (dist * dist);
                 ret[k] = lanczos;
             }
             return ret;
         };
 
         static auto const lanczos_lut = build_lanczos();
-        
 
         for (size_t n = 0; n < frames; ++n, m_pos += in_rate)
         {
