@@ -19,12 +19,13 @@
 //
 
 #include <cmath> // std::floor
-#include "../math/constants.h" // F_PI
 #include <functional> // std::function
 #include <limits> // std::numeric_limits
 #include <memory> // std::shared_ptr
 #include <type_traits> // std::is_same_v
 #include <unordered_set> // std::unordered_set
+
+#include "../math/interp.h" // lol::interp::lanczos
 
 namespace lol::audio
 {
@@ -338,32 +339,10 @@ public:
         if (in_rate == out_rate)
             return m_in->get(buf, frames);
 
-        // 16 taps lanczos filter
-        const size_t window_size = 16;
-        const float window_center = 8.0f;
-
-        const size_t constexpr lanczos_size = window_size * 64;
-        const float lanczos_lut_scale = (lanczos_size - 1) / (window_center + 1.0f);
-
-        static auto build_lanczos = [&]()
-        {
-            std::array<float, lanczos_size> ret;
-            for (int k = 0; k < lanczos_size; ++k)
-            {
-                float dist = float(k) * F_PI / lanczos_lut_scale;
-                float lanczos = 1.0f;
-                if (dist > 0.0f) lanczos = window_center * std::sin(dist) * std::sin(dist / window_center) / (dist * dist);
-                ret[k] = lanczos;
-            }
-            return ret;
-        };
-
-        static auto const lanczos_lut = build_lanczos();
-
         for (size_t n = 0; n < frames; ++n, m_pos += in_rate)
         {
             // Fill internal buffer if we don’t have enough data
-            while (m_cache.size() / channels < m_pos / out_rate + window_size)
+            while (m_cache.size() / channels < m_pos / out_rate + m_lanczos.size())
             {
                 // Remove obsolete frames on the left
                 size_t todelete = std::min(m_pos / out_rate, m_cache.size() / channels);
@@ -380,17 +359,7 @@ public:
             float alpha = float(m_pos % out_rate) / out_rate;
 
             for (size_t ch = 0; ch < channels; ++ch)
-            {
-                // lanczos upsampling
-                T value = T();
-                for (size_t wi = 0; wi < window_size; ++wi)
-                {
-                    float dist = std::abs(wi - window_center - alpha);
-                    float lanczos = lanczos_lut[int(dist * lanczos_lut_scale)];
-                    value += m_cache[(n0 + wi) * channels + ch] * lanczos;
-                }
-                *buf++ = value;
-            }
+                *buf++ = m_lanczos.get(&m_cache[n0 * channels + ch], channels, alpha);
         }
 
         return frames;
@@ -398,6 +367,8 @@ public:
 
 protected:
     std::shared_ptr<stream<T>> m_in;
+
+    interp::lanczos<T> m_lanczos;
 
     std::vector<T> m_cache;
 
