@@ -142,20 +142,4 @@ enum class ResampleAlgorithm : uint8_t
     Bresenham,
 };
 
-enum class EdiffAlgorithm : uint8_t
-{
-    FloydSteinberg,
-    JaJuNi,
-    Atkinson,
-    Fan,
-    ShiauFan,
-    ShiauFan2,
-    Stucki,
-    Burkes,
-    Sierra,
-    Sierra2,
-    Lite,
-};
-
 } // namespace lol
-
