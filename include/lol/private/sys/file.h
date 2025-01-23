@@ -20,29 +20,36 @@
 
 #include <fstream> // std::ofstream
 
-namespace lol::file
+namespace lol
 {
 
-template<typename T, typename U = typename T::value_type>
-static inline bool read(std::string const &path, T &data)
+struct file
 {
-    std::ifstream f(path, std::ios::in | std::ios::binary | std::ios::ate);
-    auto file_size = f.tellg(); // works because std::ios::ate
-    if (file_size < 0)
-        return false;
-    f.seekg(0, std::ios::beg);
-    data.resize((size_t(file_size) + sizeof(U) - 1) / sizeof(U));
-    f.read((char *)data.data(), file_size);
-    return !f.fail();
-}
+    template<typename T, typename U = typename T::value_type>
+    static inline bool read(std::string const &path, T &data)
+    {
+        std::ifstream f(path, std::ios::in | std::ios::binary | std::ios::ate);
+        auto file_size = f.tellg(); // works because std::ios::ate
+        if (file_size < 0)
+            return false;
+        f.seekg(0, std::ios::beg);
+        data.resize((size_t(file_size) + sizeof(U) - 1) / sizeof(U));
+        f.read((char *)data.data(), file_size);
+        return !f.fail();
+    }
 
-template<typename T, typename U = typename T::value_type>
-static inline bool write(std::string const &path, T const &data)
-{
-    std::ofstream f(path, std::ios::binary);
-    f.write((char const *)data.data(), data.size() * sizeof(U));
-    f.close();
-    return !f.fail();
-}
+    template<typename T, typename U = typename T::value_type>
+    static inline bool write(std::string const &path, T const &data)
+    {
+        std::ofstream f(path, std::ios::binary);
+        f.write((char const *)data.data(), data.size() * sizeof(U));
+        f.close();
+        return !f.fail();
+    }
+
+private:
+    file() = delete;
+};
+
 
 } // namespace lol::file
