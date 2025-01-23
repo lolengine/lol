@@ -21,7 +21,7 @@ namespace std { static auto getenv = [](char const *) { return nullptr; }; }
 // that, do not use <version> on systems that do not have it.
 #if !defined __SCE__
 #   include <version>
-#   if defined _LIBCPP_HAS_NO_FILESYSTEM_LIBRARY
+#   if defined _LIBCPP_HAS_NO_FILESYSTEM_LIBRARY || defined _LIBCPP_AVAILABILITY_HAS_NO_FILESYSTEM_LIBRARY
 #       define CLI11_HAS_FILESYSTEM 0
 #   endif
 #endif
