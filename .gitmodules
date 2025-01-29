@@ -38,6 +38,12 @@
 	branch = master
 	update = checkout
 
+[submodule "span"]
+	path = include/lol/3rdparty/span
+	url = https://github.com/tcbrindle/span
+	branch = master
+	update = checkout
+
 [submodule "doctest"]
 	path = include/lol/3rdparty/doctest
 	url = https://github.com/doctest/doctest

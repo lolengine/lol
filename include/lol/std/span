@@ -1,0 +1,37 @@
+//
+//  Lol Engine
+//
+//  Copyright © 2010–2025 Sam Hocevar <sam@hocevar.net>
+//
+//  Lol Engine is free software. It comes without any warranty, to
+//  the extent permitted by applicable law. You can redistribute it
+//  and/or modify it under the terms of the Do What the Fuck You Want
+//  to Public License, Version 2, as published by the WTFPL Task Force.
+//  See http://www.wtfpl.net/ for more details.
+//
+
+#pragma once
+
+// Assume std::span is available, then check for exceptions
+#define LOL_HAS_STD_SPAN 1
+
+#if !defined __SCE__
+#   include <version> // Provide __cpp_lib_span if relevant
+#   if !defined __cpp_lib_span
+#       undef LOL_HAS_STD_SPAN
+#   endif
+#endif
+
+#if defined __SCE__ // SCE platforms do not have <version>, so check for C++20 support
+#   if !_HAS_CXX20
+#       undef LOL_HAS_STD_SPAN
+#   endif
+#endif
+
+// Include <span> if everything went well, otherwise use the 3rd party implementation
+#if defined LOL_HAS_STD_SPAN
+#   include <span>
+#else
+#   define TCB_SPAN_NAMESPACE_NAME std
+#   include "../3rdparty/span/include/tcb/span.hpp"
+#endif
