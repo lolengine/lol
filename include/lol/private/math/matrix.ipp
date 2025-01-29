@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010–2024 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2025 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -15,7 +15,7 @@
 #include <cassert>
 #include <cmath>      // std::tan
 #include <algorithm>  // std::max
-#include <lol/format> // std::format
+#include <lol/std/format> // std::format
 
 namespace lol
 {

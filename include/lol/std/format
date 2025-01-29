@@ -1,7 +1,7 @@
 //
 //  Lol Engine
 //
-//  Copyright © 2010–2024 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2010–2025 Sam Hocevar <sam@hocevar.net>
 //
 //  Lol Engine is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -12,6 +12,7 @@
 
 #pragma once
 
+// Assume std::format is available, then check for exceptions
 #define LOL_HAS_STD_FORMAT 1
 
 #if !defined __SCE__
@@ -21,20 +22,23 @@
 #   endif
 #endif
 
-#if defined __SCE__
-#   undef LOL_HAS_STD_FORMAT
-#   include <cstdio>
+#if defined __SCE__ // SCE platforms do not have <format>, so check for C++20 support
+#   if !_HAS_CXX20
+#       undef LOL_HAS_STD_FORMAT
+#       include <cstdio>
 // These functions are used unconditionally in libfmt
 static inline void flockfile(FILE* f) { }
 static inline void funlockfile(FILE* f) { }
 static inline int getc_unlocked(FILE*) { return 0; }
 static inline int putc_unlocked(int, FILE*) { return 0; }
+#   endif
 #endif
 
+// Include <format> if everything went well, otherwise use the 3rd party implementation
 #if defined LOL_HAS_STD_FORMAT
 #   include <format>
 #else
 #   define FMT_HEADER_ONLY
-#   include "3rdparty/fmt/include/fmt/format.h"
+#   include "../3rdparty/fmt/include/fmt/format.h"
     namespace std { using fmt::format; }
 #endif
