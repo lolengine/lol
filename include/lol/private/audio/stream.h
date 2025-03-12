@@ -22,6 +22,7 @@
 #include <functional> // std::function
 #include <limits> // std::numeric_limits
 #include <memory> // std::shared_ptr
+#include <optional> // std::optional
 #include <type_traits> // std::is_same_v
 #include <unordered_set> // std::unordered_set
 
@@ -174,6 +175,12 @@ public:
 
     inline size_t frame_size() const { return channels() * sizeof(T); }
 
+    virtual std::optional<size_t> size() const { return std::nullopt; }
+
+    virtual std::optional<size_t> pos() const { return std::nullopt; }
+
+    virtual bool seek(size_t pos) { return false; }
+
     virtual ~stream() = default;
 
 protected:
@@ -275,6 +282,21 @@ public:
         return frames;
     }
 
+    virtual std::optional<size_t> size() const override
+    {
+        return m_in->size();
+    }
+
+    virtual std::optional<size_t> pos() const override
+    {
+        return m_in->pos();
+    }
+
+    virtual bool seek(size_t pos) override
+    {
+        return m_in->seek(pos);
+    }
+
 protected:
     std::shared_ptr<stream<T0>> m_in;
 };
@@ -314,6 +336,21 @@ public:
         }
 
         return frames;
+    }
+
+    virtual std::optional<size_t> size() const override
+    {
+        return m_in->size();
+    }
+
+    virtual std::optional<size_t> pos() const override
+    {
+        return m_in->pos();
+    }
+
+    virtual bool seek(size_t pos) override
+    {
+        return m_in->seek(pos);
     }
 
 protected:
@@ -364,6 +401,8 @@ public:
 
         return frames;
     }
+
+    // FIXME: size/pos/seek API
 
 protected:
     std::shared_ptr<stream<T>> m_in;
